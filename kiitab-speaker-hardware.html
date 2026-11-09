@@ -310,6 +310,7 @@ flowchart LR
   D --> I["Top motor"]
   I --> N["Add-on seat"]
   F <-- "USB audio, I2C" --> J["Top board: mics, touch, ring"]
+  F <-- "serial link" --> S["ESP32-S3: lights, touch, motors"]
   F -- "I2S audio" --> E
   E --> K["4 side speakers"]
   E --> L["Bass speaker"]
@@ -328,12 +329,24 @@ flowchart LR
   </section>
 
   <section>
+    <h2>The Kiitab family: from the simplest to the most advanced</h2>
+    <p>Every model shares the same bottom half: base, turning plate, bottom motor, power board and bass speaker. Only the top half and the screen change, so each step up is a new top, not a new speaker.</p>
+    <div class="tablewrap"><table style="min-width:600px"><thead><tr><th>Step</th><th>Model</th><th>Screen</th><th>What it adds</th></tr></thead><tbody>
+      <tr><td>1</td><td>Plain (K1-P)</td><td>None</td><td>This study: the light net and the top ring carry the character.</td></tr>
+      <tr><td>2</td><td>Face</td><td>One flexible AMOLED on the front</td><td>Shows the character's face, and turns with the body.</td></tr>
+      <tr><td>3</td><td>Wrap</td><td>Flexible AMOLED all the way round</td><td>The character can be seen from any side.</td></tr>
+      <tr><td>4</td><td>Cube</td><td>Four AMOLED panels, one per side</td><td>The most advanced: the most power, heat and cost, so it comes last.</td></tr>
+    </tbody></table></div>
+    <p class="note">AMOLED pixels light themselves, so no backlight is needed. Burn-in is a risk for a face that stays still for long, so the plan is to move and dim the face over time.</p>
+  </section>
+
+  <section>
     <h2>Questions for the owner</h2>
     <ol class="qs">
       <li><b>Top motor.</b> I have it turning the add-on seat (a dome or the Kaaba's mataf turning slowly). Did you mean something else, such as opening a lid, tilting the top or lifting an add-on?</li>
       <li><b>Battery.</b> This design runs from the wall only. A battery for carrying it room to room would sit in the bottom half, add about 250 g, and needs a charging circuit.</li>
       <li><b>The grille under the base.</b> The design mockup shows a speaker grille under the base. With a turning body and a 13 mm base, the bass speaker fits better in the body, firing down so its sound comes out of the gap around the base. The underside then has only feet, the switch and the label.</li>
-      <li><b>Where the brain runs.</b> A Linux module on the main board runs the Kiitab brain on the speaker and keeps recitations for offline use (about 60 to 90 dollars). A much cheaper chip (about 5 dollars) could only pass sound to the phone or the internet, so the speaker would need the phone or the internet for everything.</li>
+      <li><b>Where the brain runs (decided).</b> The Rockchip RK3576 on the main board runs the brain and the speech recognition on its NPU, and keeps recitations for offline use. The ESP32-S3 handles the lights, touch and motors. This is the owner's choice for the NPU and lower power, and the RAM and storage still need confirming.</li>
       <li><b>Microphone switch.</b> Should there be a hardware switch at the back that cuts power to the microphones, with a small red light, for families who want to be sure it is not listening?</li>
     </ol>
   </section>
@@ -365,7 +378,8 @@ flowchart LR
     { id: "seat", g: "motion", name: "Add-on seat", what: "The round seat in the middle of the top. Magnets hold an add-on; two small contact rings power its lights, even while it turns.", sug: "Brass ring, 4 × N52 magnets 6 × 2 mm", size: "Ø 24", n: 1 },
     { id: "topboard", g: "boards", name: "Top board", what: "Four microphones that hear the name from any side, the voice chip that removes the speaker's own sound, the touch pads and the 24 ring lights.", sug: "XMOS XVF3800 voice chip, 4 × MEMS mic, 24 × SK6812 mini", size: "90 × 90 × 1.6", n: 1, pw: [0.6, 1.8] },
     { id: "topmotor", g: "motion", name: "Top motor", what: "A tiny geared motor under the top board. It turns the add-on seat slowly, about 2 turns a minute, and its encoder knows where the seat is.", sug: "N20 gear motor 6 V, 1:298, with encoder", size: "12 × 10 × 34", n: 1, pw: [0.3, 0.8] },
-    { id: "main", g: "boards", name: "Main board (the brain)", what: "Runs the Kiitab brain: listening, answers, reciting, the topics. Keeps recitations already played for offline use. Wi-Fi for the app and the internet, Bluetooth for the remote.", sug: "Linux module like Raspberry Pi CM5 (4 GB, 32 GB) on our own board", size: "100 × 68 × 1.6", n: 1, pw: [4, 8] },
+    { id: "main", g: "boards", name: "Main board (the brain)", what: "Runs the Kiitab brain: listening, answers, reciting, the topics. Its NPU does the speech recognition on the speaker. Keeps recitations already played for offline use. Wi-Fi for the app and the internet, Bluetooth for the remote.", sug: "Rockchip RK3576 module (NPU, lower power) on our own board; RAM and storage to confirm", size: "100 × 68 × 1.6", n: 1, pw: [4, 8] },
+    { id: "esp", g: "boards", name: "Light, touch and motor board", what: "Runs the lights, the touch pads and both motors, so the main board is free for the brain. Talks to the main board over a serial link.", sug: "ESP32-S3 module on our own board", size: "40 × 30 × 1.6", n: 1 },
     { id: "antenna", g: "boards", name: "Wi-Fi and Bluetooth antenna", what: "A flexible antenna high on the side, away from the speaker magnets and the metal plate, so it reaches the phone from any direction.", sug: "Flex PCB antenna 2.4 / 5 GHz", size: "40 × 10", n: 1 },
     { id: "box", g: "sound", name: "Sound box", what: "A sealed box that gives the speakers their bass. It is also the spine: the top and bottom plates screw onto it.", sug: "Glass-filled ABS, 3 mm walls, damping foam inside", size: "128 × 128 × 118", n: 1 },
     { id: "mids", g: "sound", name: "Side speakers", what: "One on each side, so the voice is clear all round the room, whichever way the speaker faces.", sug: "63 mm full-range, 8 Ω, 10 W", size: "Ø 63 × 32", n: 4, pw: [2, 16] },
