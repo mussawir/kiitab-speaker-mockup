@@ -306,7 +306,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
           <p class="desc" id="lookNote" hidden></p>
         </div>
         <div class="group" id="powerGroup" hidden>
-          <div class="label">Power Speaker colour</div>
+          <div class="label">Colour</div>
           <div class="swatches" id="powerColours"></div>
           <p class="desc" id="powerDesc"></p>
         </div>
@@ -375,6 +375,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
         <li><b>Step 3, Wrap:</b> the flexible screen goes all the way round, so the words can be read from any side.</li>
         <li><b>Step 4, Cube:</b> a cube fully covered with AMOLED on all four sides. The most advanced, with the most power, heat and cost, so it comes last.</li>
         <li><b>Power Speaker:</b> a new model, not a step on the ladder. A dark grey box after a studio subwoofer: the whole front is one AMOLED screen, a big woofer on each side so the voice is clear, and slim keys on top.</li>
+        <li><b>Ultrawide Speaker:</b> the Power Speaker's idea in the shape of an ultrawide monitor. One wide AMOLED screen across the whole front, so a full ayah and its translation fit on one line; thick sides that hold the big woofers; and the keys on top.</li>
       </ul>
       <p class="note">AMOLED burns in if one picture stays still for hours, so the face moves and dims over time.</p>
     </section>
@@ -426,6 +427,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     { id: "mihrab", name: "Mihrab", line: "Narrows like a lantern, arches on the screen", taper: 0.14, bandH: 0.6, bandY: 0.0, arches: true, screen: "wrap" },
     { id: "cube", name: "Cube", line: "A cube fully covered with AMOLED on all four sides", taper: 0, bandH: 0.9, bandY: 0.0, screen: "wrap" },
     { id: "power", name: "Power Speaker", line: "A box speaker in five colours: the whole front is an AMOLED screen, a big woofer on each side, keys on top", taper: 0, bandH: 1.16, bandY: 0.0, screen: "front", depth: 0.62, width: 0.8, radius: 0.06, black: true, flat: true },
+    { id: "wide", name: "Ultrawide Speaker", line: "Shaped like an ultrawide monitor: one wide AMOLED screen across the front, thick sides with big woofers, keys on top", taper: 0, bandH: 1.16, bandY: 0.0, screen: "front", depth: 0.62, width: 1.9, height: 0.62, radius: 0.045, black: true, flat: true, camDist: 5.0 },
     { id: "lcd", name: "Small display", line: "A little LCD on the front: surah, ayah, time, count", taper: 0, bandH: 0.13, bandY: 0.14, screen: "lcd" },
   ];
   // What each kind of screen can show, said in the app under the shape.
@@ -1026,7 +1028,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
   // Each part is the same shell, cut by two flat planes that move with it.
   renderer.localClippingEnabled = true;
   const topSec = new THREE.Group(), sleeve = new THREE.Group(), bottomSec = new THREE.Group();
-  let bodyDepth = 1, bodyWidth = 1;   // how deep and how wide the casing is, compared with the default; some shapes are narrower
+  let bodyDepth = 1, bodyWidth = 1, bodyHeight = 1;   // the casing's depth, width and height compared with the default
   speaker.add(topSec, sleeve, bottomSec);
   const planes = {
     top: new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), midLo: new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
@@ -1323,7 +1325,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
   const DARK_GREY = new THREE.Color(0x2a2d30).convertSRGBToLinear();
   function buildGlassFront(L) {
     const r = L.radius || R, pw = W - 2 * r + 0.07, ph = H - 2 * r + 0.07, zf = D / 2 + 0.004;
-    makeBand(1536, Math.round(1536 * ph / (pw * (L.width || 1))));
+    makeBand(1536, Math.round(1536 * ph * (L.height || 1) / (pw * (L.width || 1))));
     FACES = { front: BAND_W / 2 }; FACE_W = BAND_W;
     raised = new THREE.Mesh(new THREE.BoxGeometry(pw, ph, 0.01), glassMat);
     raised.position.set(0, 0, zf); sleeve.add(raised);
@@ -1388,15 +1390,17 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     redrawBand();
     buildAddon();
     // A shape can be shallower than it is wide: squash the casing's depth (not the base).
-    bodyDepth = L.depth || 1; bodyWidth = L.width || 1;
-    [topSec, bottomSec].forEach(g => { g.scale.x = bodyWidth; g.scale.z = bodyDepth; });
+    bodyDepth = L.depth || 1; bodyWidth = L.width || 1; bodyHeight = L.height || 1;
+    [topSec, bottomSec].forEach(g => { g.scale.x = bodyWidth; g.scale.y = bodyHeight; g.scale.z = bodyDepth; });
+    // A lower body is moved down so it still stands on the floor.
+    speaker.position.y = -(H / 2) * (1 - bodyHeight);
     // The flat black shapes have no wooden top, add-on or base: the box stands on its own bottom.
     plate.visible = addon.visible = baseGroup.visible = !L.flat;
     // The app shows the Power Speaker's colours for it, and the fabric and add-on choices for the others.
-    $("powerGroup").hidden = L.id !== "power";
+    $("powerGroup").hidden = !L.black;
     $("addonGroup").hidden = $("casingGroup").hidden = !!L.flat;
     // The light ring lies flat on the top; stretch it back so the squashed casing does not make it an oval.
-    ring.scale.set(t / bodyWidth, t / bodyDepth, t);
+    ring.scale.set(t / bodyWidth, t / bodyDepth, t / bodyHeight);
     buildSpeakerParts(L);
   }
   // Parts only the Power Speaker has (woofers, keys). Every other shape gets empty lists.
@@ -1407,7 +1411,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     }
     const ex = speaker.userData.extras;
     ex.side.clear(); ex.top.clear();
-    if (L.id === "power") buildPowerParts(ex);
+    if (L.black) buildPowerParts(ex);
   }
   // The Power Speaker, after a studio subwoofer: one big woofer in the centre of each side under dark acoustic
   // cloth, and four slim metal keys on the top.
@@ -1428,16 +1432,16 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
       ex.rim = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x0a0b0c).convertSRGBToLinear(), roughness: 0.35, metalness: 0.6, side: THREE.DoubleSide });
       ex.key = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x3a3d40).convertSRGBToLinear(), roughness: 0.28, metalness: 0.75 });
     }
-    const sx = 1 / bodyWidth, sz = 1 / bodyDepth;
+    const sx = 1 / bodyWidth, sy = 1 / bodyHeight, sz = 1 / bodyDepth;
     const rad = 0.215, zc = 0, yc = 0;   // big, in the centre of the side
     [[-1, -Math.PI / 2], [1, Math.PI / 2]].forEach(([s, ry]) => {
       const disc = new THREE.Mesh(new THREE.CircleGeometry(rad, 96), ex.cloth);
       const rim = new THREE.Mesh(new THREE.RingGeometry(rad, rad + 0.007, 96), ex.rim);
-      [disc, rim].forEach((m, k) => { m.position.set(s * (W / 2 + 0.002 + k * 0.0006), yc, zc); m.rotation.y = ry; m.scale.x = sz; ex.side.add(m); });
+      [disc, rim].forEach((m, k) => { m.position.set(s * (W / 2 + 0.002 + k * 0.0006), yc, zc); m.rotation.y = ry; m.scale.set(sz, sy, 1); ex.side.add(m); });
     });
     [-0.165, -0.055, 0.055, 0.165].forEach(x => {
       const b = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.006, 40), ex.key);
-      b.position.set(x * sx, H / 2 + 0.003, 0.2 * sz); b.scale.set(sx, 1, sz); ex.top.add(b);
+      b.position.set(x * sx, H / 2 + 0.003 * sy, 0.2 * sz); b.scale.set(sx, sy, sz); ex.top.add(b);
     });
   }
   // A mihrab arch: straight sides, then two curves meeting in a point.
@@ -1801,7 +1805,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
   const stop = () => { dragging = false; };
   canvas.addEventListener("pointerup", stop); canvas.addEventListener("pointercancel", stop);
   function placeCamera() {
-    const dist = 4.7 + 1.5 * openE, ty = -0.05 + 0.2 * openE;   // step back while the cover is off
+    const dist = (state.look.camDist || 4.7) + 1.5 * openE, ty = -0.05 + 0.2 * openE;   // step back while the cover is off
     camera.position.set(0, ty + Math.sin(elev) * dist, Math.cos(elev) * dist);
     camera.lookAt(0, ty, 0);
   }
@@ -1843,7 +1847,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     openE += ((state.open ? 1 : 0) - openE) * Math.min(1, dt * 2.2);
     const ease = x => x * x * (3 - 2 * x), e1 = ease(Math.min(1, openE / 0.5)), e2 = ease(Math.max(0, (openE - 0.4) / 0.6));
     const topOff = 0.5 * e1, slOff = 0.3 * e2, botOff = -0.14 * e1;
-    topSec.position.y = topOff; sleeve.position.y = slOff; sleeve.scale.set((1 + 0.04 * e2) * bodyWidth, 1, (1 + 0.04 * e2) * bodyDepth);
+    topSec.position.y = topOff; sleeve.position.y = slOff; sleeve.scale.set((1 + 0.04 * e2) * bodyWidth, bodyHeight, (1 + 0.04 * e2) * bodyDepth);
     bottomSec.position.y = botOff; baseGroup.position.y = botOff;
     const Lk = state.look, cutHi = Lk.bandY + Lk.bandH / 2 + 0.035, cutLo = Lk.bandY - Lk.bandH / 2 - 0.035;
     planes.top.constant = -(cutHi + topOff); planes.midLo.constant = -(cutLo + slOff);
