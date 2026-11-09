@@ -368,7 +368,8 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
         <li><b>Step 1, Plain:</b> no screen. It speaks, and its light shows what it is doing.</li>
         <li><b>Step 2, Face:</b> one flexible AMOLED screen on the front, which shows the face and turns with the body.</li>
         <li><b>Step 3, Wrap:</b> the flexible screen goes all the way round, so the words can be read from any side.</li>
-        <li><b>Step 4, Cube:</b> four screen panels, one per side. The most advanced, with the most power, heat and cost, so it comes last.</li>
+        <li><b>Step 4, Cube:</b> a cube fully covered with AMOLED on all four sides. The most advanced, with the most power, heat and cost, so it comes last.</li>
+        <li><b>Speaker:</b> a new model, not a step on the ladder. A modern speaker with one full AMOLED side, speakers on the other sides so the voice is clear, operation buttons on top, and a strong base that does not turn.</li>
       </ul>
       <p class="note">AMOLED burns in if one picture stays still for hours, so the face moves and dims over time.</p>
     </section>
@@ -418,6 +419,8 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     { id: "front", name: "Face", line: "One flexible AMOLED screen on the front, the other sides plain fabric", taper: 0, bandH: 0.5, bandY: 0.02, screen: "front" },
     { id: "classic", name: "Classic", line: "Rounded square, wood and brass, screen all round", taper: 0, bandH: 0.5, bandY: 0.02, screen: "wrap" },
     { id: "mihrab", name: "Mihrab", line: "Narrows like a lantern, arches on the screen", taper: 0.14, bandH: 0.6, bandY: 0.0, arches: true, screen: "wrap" },
+    { id: "cube", name: "Cube", line: "A cube fully covered with AMOLED on all four sides", taper: 0, bandH: 0.9, bandY: 0.0, screen: "wrap" },
+    { id: "speaker", name: "Speaker", line: "A modern speaker: one full AMOLED side, speakers on the other sides, buttons on top, a strong fixed base", taper: 0, bandH: 0.9, bandY: 0.0, screen: "front", fixed: true },
     { id: "lcd", name: "Small display", line: "A little LCD on the front: surah, ayah, time, count", taper: 0, bandH: 0.13, bandY: 0.14, screen: "lcd" },
   ];
   // What each kind of screen can show, said in the app under the shape.
@@ -1736,7 +1739,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
       yaw += ((-0.35 + (reduce ? 0 : 0.4 * Math.sin(t * 0.22))) - yaw) * 0.02;
     }
     if (state.spin) yaw += dt * 0.35;
-    speaker.rotation.y = yaw;
+    speaker.rotation.y = state.look.fixed ? 0 : yaw;   // the strong speaker's base stays still
     if (state.tour && !state.standby && t - tourT > 7) {
       tourT = t;
       const i = TOPICS.findIndex(m => m.id === state.mode);
