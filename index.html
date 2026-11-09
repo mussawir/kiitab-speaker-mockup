@@ -425,7 +425,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     { id: "classic", name: "Classic", line: "Rounded square, wood and brass, screen all round", taper: 0, bandH: 0.5, bandY: 0.02, screen: "wrap" },
     { id: "mihrab", name: "Mihrab", line: "Narrows like a lantern, arches on the screen", taper: 0.14, bandH: 0.6, bandY: 0.0, arches: true, screen: "wrap" },
     { id: "cube", name: "Cube", line: "A cube fully covered with AMOLED on all four sides", taper: 0, bandH: 0.9, bandY: 0.0, screen: "wrap" },
-    { id: "power", name: "Power Speaker", line: "A dark grey box speaker: the whole front is an AMOLED screen, a big woofer on each side, keys on top", taper: 0, bandH: 1.16, bandY: 0.0, screen: "front", depth: 0.62, width: 0.8, radius: 0.06, black: true, flat: true },
+    { id: "power", name: "Power Speaker", line: "A box speaker in five colours: the whole front is an AMOLED screen, a big woofer on each side, keys on top", taper: 0, bandH: 1.16, bandY: 0.0, screen: "front", depth: 0.62, width: 0.8, radius: 0.06, black: true, flat: true },
     { id: "lcd", name: "Small display", line: "A little LCD on the front: surah, ayah, time, count", taper: 0, bandH: 0.13, bandY: 0.14, screen: "lcd" },
   ];
   // What each kind of screen can show, said in the app under the shape.
@@ -594,15 +594,16 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
   buttons($("casings"), CASINGS, c => c[1] === state.casing, c => { state.casing = c[1]; state.casingGlow = c[2]; $("casingDesc").textContent = c[3]; paintCasing(); }, (b, c) => swatch(b, c, "casing"));
   $("casingDesc").textContent = CASINGS[0][3];
   // The Power Speaker's own colours: a painted metal body, not fabric, so the fabric casings do not apply to it.
+  // Each: name, colour, what the app says, how metallic and how rough the paint is.
   const POWER_COLOURS = [
-    ["Graphite", "#2a2d30", "Graphite: dark grey satin metal, like a studio subwoofer."],
-    ["Midnight", "#121314", "Midnight: deep black, so the screen and the body read as one piece."],
-    ["Gunmetal blue", "#2e3944", "Gunmetal blue: a cool blue-grey metal."],
-    ["Forest green", "#1f3a30", "Forest green: a deep green, quiet in a family room."],
-    ["Sand", "#b8ac96", "Sand: a warm light stone colour that sits well beside wooden furniture."],
+    ["Cream", "#d6c6a2", "Cream: a soft warm white that sits well beside wooden furniture.", 0.05, 0.55],
+    ["Black", "#141516", "Black: deep black, so the screen and the body read as one piece.", 0.3, 0.4],
+    ["Light Gray", "#9fa3a7", "Light Gray: a calm pale grey.", 0.2, 0.45],
+    ["Steel", "#6c747c", "Steel: brushed metal with a soft sheen.", 0.65, 0.28],
+    ["Dark Green", "#1d3b2f", "Dark Green: a deep green, quiet in a family room.", 0.25, 0.45],
   ];
   state.power = POWER_COLOURS[0];
-  buttons($("powerColours"), POWER_COLOURS, c => c === state.power, c => { state.power = c; DARK_GREY.set(c[1]).convertSRGBToLinear(); $("powerDesc").textContent = c[2]; }, (b, c) => swatch(b, c, "power"));
+  buttons($("powerColours"), POWER_COLOURS, c => c === state.power, c => { state.power = c; $("powerDesc").textContent = c[2]; }, (b, c) => swatch(b, c, "power"));
   $("powerDesc").textContent = POWER_COLOURS[0][2];
   buttons($("woods"), WOODS, w => w === state.wood, w => { state.wood = w; topTex.redraw(); woodTex.redraw(); makerTex.redraw(); }, (b, w) => { b.id = "wood-" + w[0]; b.textContent = w[0]; });
   showLayout();
@@ -1873,9 +1874,11 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     ringMat.color.copy(led).multiplyScalar(sb ? 0.03 : state.mode === "night" ? 0.35 : 0.7 + voice * 0.6);
     seamMat.color.copy(led).multiplyScalar(0.08 + lightOn * (0.5 + lvl));
     glowMat.color.copy(led); glowMat.opacity = lightOn * (0.25 + lvl * 0.6);
-    // The Power Speaker is dark grey metal: the light inside never colours it, and it has no glowing base.
+    // The Power Speaker is painted metal in its chosen colour: the light inside never colours it, and it has no glowing base.
     if (state.look.black) {
-      casingMats.forEach(m => { m.color.copy(DARK_GREY); m.emissiveIntensity = 0; m.roughness = 0.42; m.metalness = 0.35; });
+      const [, hex, , metal, rough] = state.power;
+      DARK_GREY.set(hex).convertSRGBToLinear();
+      casingMats.forEach(m => { m.color.copy(DARK_GREY); m.emissiveIntensity = 0; m.roughness = rough; m.metalness = metal; });
       glowMat.opacity = 0;
     } else casingMats.forEach(m => { m.metalness = 0; });
     // The screen: barely visible behind the casing when hidden, a dark panel when glass.
