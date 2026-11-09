@@ -369,7 +369,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
         <li><b>Step 2, Face:</b> one flexible AMOLED screen on the front, which shows the face and turns with the body.</li>
         <li><b>Step 3, Wrap:</b> the flexible screen goes all the way round, so the words can be read from any side.</li>
         <li><b>Step 4, Cube:</b> a cube fully covered with AMOLED on all four sides. The most advanced, with the most power, heat and cost, so it comes last.</li>
-        <li><b>Speaker:</b> a new model, not a step on the ladder. A modern speaker with one full AMOLED side, speakers on the other sides so the voice is clear, operation buttons on top, and a strong base that does not turn.</li>
+        <li><b>Power Speaker:</b> a new model, not a step on the ladder. A dark grey box after a studio subwoofer: the whole front is one AMOLED screen, a big woofer on each side so the voice is clear, and slim keys on top.</li>
       </ul>
       <p class="note">AMOLED burns in if one picture stays still for hours, so the face moves and dims over time.</p>
     </section>
@@ -420,8 +420,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     { id: "classic", name: "Classic", line: "Rounded square, wood and brass, screen all round", taper: 0, bandH: 0.5, bandY: 0.02, screen: "wrap" },
     { id: "mihrab", name: "Mihrab", line: "Narrows like a lantern, arches on the screen", taper: 0.14, bandH: 0.6, bandY: 0.0, arches: true, screen: "wrap" },
     { id: "cube", name: "Cube", line: "A cube fully covered with AMOLED on all four sides", taper: 0, bandH: 0.9, bandY: 0.0, screen: "wrap" },
-    { id: "speaker", name: "Speaker", line: "A modern speaker: the whole front is one AMOLED screen, speakers on the other sides, buttons on top, a strong fixed base", taper: 0, bandH: 1.16, bandY: 0.0, screen: "front", fixed: true },
-    { id: "power", name: "Power Speaker", line: "A black box speaker: the whole front is an AMOLED screen, oval speakers on the sides, buttons on top; it turns", taper: 0, bandH: 1.16, bandY: 0.0, screen: "front", depth: 0.62, width: 0.8, radius: 0.06, black: true, flat: true },
+    { id: "power", name: "Power Speaker", line: "A dark grey box speaker: the whole front is an AMOLED screen, a big woofer on each side, keys on top", taper: 0, bandH: 1.16, bandY: 0.0, screen: "front", depth: 0.62, width: 0.8, radius: 0.06, black: true, flat: true },
     { id: "lcd", name: "Small display", line: "A little LCD on the front: surah, ayah, time, count", taper: 0, bandH: 0.13, bandY: 0.14, screen: "lcd" },
   ];
   // What each kind of screen can show, said in the app under the shape.
@@ -487,8 +486,8 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
   const WOODS = [["Walnut", "#6b4a2f", "#4a311d"], ["Oak", "#b8905f", "#8a6a42"], ["Ebony", "#2e2724", "#1b1715"]];
 
   const state = {
-    // ?shape=power (or any shape id) in the address opens that shape; otherwise the Speaker.
-    look: LOOKS.find(l => l.id === new URLSearchParams(location.search).get("shape")) || LOOKS.find(l => l.id === "speaker"), mode: "recite", layout: "run", screen: "hidden",
+    // ?shape=classic (or any shape id) in the address opens that shape; otherwise the Power Speaker.
+    look: LOOKS.find(l => l.id === new URLSearchParams(location.search).get("shape")) || LOOKS.find(l => l.id === "power"), mode: "recite", layout: "run", screen: "hidden",
     sides: { front: "arabic", right: "english", back: "info", left: "clock" },
     led: LEDS[0][1], cycle: false, level: 1, pattern: "none", palette: "mono", move: false, frames: false, addon: "none", kaabaSpin: false, tour: false,
     casing: CASINGS[0][1], casingGlow: 1, finish: "linen", open: false, wood: WOODS[0], spin: false, view: "front",
@@ -1380,36 +1379,15 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     ring.scale.set(t / bodyWidth, t / bodyDepth, t);
     buildSpeakerParts(L);
   }
-  // The speaker model's own parts: a round speaker grille on each side that is not the screen, and four
-  // operation buttons on the top. The other shapes have none of these, so their lists are kept empty.
+  // Parts only the Power Speaker has (woofers, keys). Every other shape gets empty lists.
   function buildSpeakerParts(L) {
     if (!speaker.userData.extras) {
-      speaker.userData.extras = { side: new THREE.Group(), top: new THREE.Group(), grille: null, button: null };
+      speaker.userData.extras = { side: new THREE.Group(), top: new THREE.Group() };
       sleeve.add(speaker.userData.extras.side); topSec.add(speaker.userData.extras.top);
     }
     const ex = speaker.userData.extras;
     ex.side.clear(); ex.top.clear();
-    if (L.id !== "speaker" && L.id !== "power") return;
-    if (L.id === "power") return buildPowerParts(ex);
-    if (!ex.grille) {
-      // Dots on a dark disc, like the holes of a real speaker grille.
-      ex.grille = new THREE.MeshStandardMaterial({ roughness: 0.6, metalness: 0.3, color: 0xffffff, map: canvasTex(256, 256, (g, w, h) => {
-        g.fillStyle = "#1c1f1e"; g.fillRect(0, 0, w, h); g.fillStyle = "#050606";
-        for (let y = 14; y < h; y += 16) for (let x = 14 + ((y / 16) % 2 ? 8 : 0); x < w; x += 16) {
-          if ((x - w / 2) ** 2 + (y - h / 2) ** 2 < (w / 2 - 14) ** 2) { g.beginPath(); g.arc(x, y, 4.5, 0, Math.PI * 2); g.fill(); }
-        }
-      }) });
-      ex.button = new THREE.MeshStandardMaterial({ color: 0x2b2f2e, roughness: 0.35, metalness: 0.2 });
-    }
-    // Left, right and back: a flat disc set just proud of the casing, facing outwards.
-    [[-W / 2 - 0.003, 0, 0, -Math.PI / 2], [W / 2 + 0.003, 0, 0, Math.PI / 2], [0, 0, -D / 2 - 0.003, Math.PI]].forEach(([x, y, z, ry]) => {
-      const m = new THREE.Mesh(new THREE.CircleGeometry(0.2, 48), ex.grille); m.position.set(x, y, z); m.rotation.y = ry;
-      ex.side.add(m);
-    });
-    // Four buttons along the front edge of the top, clear of the microphones.
-    [-0.3, -0.1, 0.1, 0.3].forEach(x => {
-      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.012, 28), ex.button); b.position.set(x, H / 2 + 0.006, 0.4); ex.top.add(b);
-    });
+    if (L.id === "power") buildPowerParts(ex);
   }
   // The Power Speaker, after a studio subwoofer: one big woofer on each side under dark acoustic cloth, set back
   // from the front so a clean band of casing runs before it, and four slim metal keys on the top.
@@ -1835,7 +1813,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
       yaw += ((-0.35 + (reduce ? 0 : 0.4 * Math.sin(t * 0.22))) - yaw) * 0.02;
     }
     if (state.spin) yaw += dt * 0.35;
-    speaker.rotation.y = state.look.fixed ? 0 : yaw;   // the strong speaker's base stays still
+    speaker.rotation.y = yaw;
     if (state.tour && !state.standby && t - tourT > 7) {
       tourT = t;
       const i = TOPICS.findIndex(m => m.id === state.mode);
