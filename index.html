@@ -35,7 +35,7 @@ h1 .ar { font-family: var(--arabic); font-weight: 700; color: var(--accent); mar
 .stagecol { display: grid; gap: 12px; min-width: 0; position: sticky; top: env(safe-area-inset-top, 0px); }
 @media (max-width: 860px) { .stagecol { position: static; } }
 .stage { position: relative; border-radius: 18px; overflow: hidden; aspect-ratio: 1 / 1; max-width: 100%;
-  background: radial-gradient(120% 90% at 50% 35%, #26302b 0%, #121714 55%, #0a0d0b 100%); }
+  background: radial-gradient(120% 90% at 50% 35%, #80858a 0%, #5a5e62 55%, #3c3f42 100%); }   /* a grey studio, not black */
 .stage canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
 .stage canvas:active { cursor: grabbing; }
 .stage .hint { position: absolute; left: 14px; bottom: 12px; font-size: 12px; color: #b9c6bf; opacity: .8; }
@@ -563,7 +563,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     TABS.forEach(([t]) => $("tab-" + t).setAttribute("aria-selected", String(t === id)));
     document.querySelectorAll(".pane").forEach(p => p.hidden = p.dataset.pane !== id);
   }
-  showTab("now");
+  showTab("speaker");   // the page opens on the Speaker tab, with the shapes
   // The cards are topics. Listening is not one of them: it is the microphone button, about whichever topic is on.
   const TOPICS = MODES.filter(m => m.id !== "listen");
   const syncModes = buttons($("modes"), TOPICS, m => m.id === state.mode, m => { endListen(false); setMode(m.id); showChat(null); askFor(m.id); }, (b, m) => { b.id = "mode-" + m.id; b.innerHTML = (m.id === "qaida" ? '<span class="glyph" lang="ar">ا ب</span>' : svg(ICON["m_" + m.id])) + `<span>${m.name}</span>`; });
