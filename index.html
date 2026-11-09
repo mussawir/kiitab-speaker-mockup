@@ -1344,6 +1344,36 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     offset = 0; layoutCache = null;
     redrawBand();
     buildAddon();
+    buildSpeakerParts(L);
+  }
+  // The speaker model's own parts: a round speaker grille on each side that is not the screen, and four
+  // operation buttons on the top. The other shapes have none of these, so their lists are kept empty.
+  function buildSpeakerParts(L) {
+    if (!speaker.userData.extras) {
+      speaker.userData.extras = { side: new THREE.Group(), top: new THREE.Group(), grille: null, button: null };
+      sleeve.add(speaker.userData.extras.side); topSec.add(speaker.userData.extras.top);
+    }
+    const ex = speaker.userData.extras;
+    ex.side.clear(); ex.top.clear();
+    if (L.id !== "speaker") return;
+    if (!ex.grille) {
+      // Dots on a dark disc, like the holes of a real speaker grille.
+      ex.grille = new THREE.MeshStandardMaterial({ roughness: 0.6, metalness: 0.3, color: 0xffffff, map: canvasTex(256, 256, (g, w, h) => {
+        g.fillStyle = "#1c1f1e"; g.fillRect(0, 0, w, h); g.fillStyle = "#050606";
+        for (let y = 14; y < h; y += 16) for (let x = 14 + ((y / 16) % 2 ? 8 : 0); x < w; x += 16) {
+          if ((x - w / 2) ** 2 + (y - h / 2) ** 2 < (w / 2 - 14) ** 2) { g.beginPath(); g.arc(x, y, 4.5, 0, Math.PI * 2); g.fill(); }
+        }
+      }) });
+      ex.button = new THREE.MeshStandardMaterial({ color: 0x2b2f2e, roughness: 0.35, metalness: 0.2 });
+    }
+    // Left, right and back: a flat disc set just proud of the casing, facing outwards.
+    [[-W / 2 - 0.003, 0, 0, -Math.PI / 2], [W / 2 + 0.003, 0, 0, Math.PI / 2], [0, 0, -D / 2 - 0.003, Math.PI]].forEach(([x, y, z, ry]) => {
+      const m = new THREE.Mesh(new THREE.CircleGeometry(0.2, 48), ex.grille); m.position.set(x, y, z); m.rotation.y = ry; ex.side.add(m);
+    });
+    // Four buttons along the front edge of the top, clear of the microphones.
+    [-0.3, -0.1, 0.1, 0.3].forEach(x => {
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.012, 28), ex.button); b.position.set(x, H / 2 + 0.006, 0.4); ex.top.add(b);
+    });
   }
   // A mihrab arch: straight sides, then two curves meeting in a point.
   // With arches drawn, each side's content sits inside its arch, below where the arch starts to curve.
