@@ -420,7 +420,8 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     { id: "classic", name: "Classic", line: "Rounded square, wood and brass, screen all round", taper: 0, bandH: 0.5, bandY: 0.02, screen: "wrap" },
     { id: "mihrab", name: "Mihrab", line: "Narrows like a lantern, arches on the screen", taper: 0.14, bandH: 0.6, bandY: 0.0, arches: true, screen: "wrap" },
     { id: "cube", name: "Cube", line: "A cube fully covered with AMOLED on all four sides", taper: 0, bandH: 0.9, bandY: 0.0, screen: "wrap" },
-    { id: "speaker", name: "Speaker", line: "A modern speaker: one full AMOLED side, speakers on the other sides, buttons on top, a strong fixed base", taper: 0, bandH: 0.9, bandY: 0.0, screen: "front", fixed: true },
+    { id: "speaker", name: "Speaker", line: "A modern speaker: the whole front is one AMOLED screen, speakers on the other sides, buttons on top, a strong fixed base", taper: 0, bandH: 1.08, bandY: 0.0, screen: "front", fixed: true },
+    { id: "box", name: "Box", line: "A modern powerful box speaker: a full AMOLED front, round speakers on the sides, buttons on top, a strong fixed base", taper: 0, bandH: 1.08, bandY: 0.0, screen: "front", fixed: true, depth: 0.62 },
     { id: "lcd", name: "Small display", line: "A little LCD on the front: surah, ayah, time, count", taper: 0, bandH: 0.13, bandY: 0.14, screen: "lcd" },
   ];
   // What each kind of screen can show, said in the app under the shape.
@@ -1008,6 +1009,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
   // Each part is the same shell, cut by two flat planes that move with it.
   renderer.localClippingEnabled = true;
   const topSec = new THREE.Group(), sleeve = new THREE.Group(), bottomSec = new THREE.Group();
+  let bodyDepth = 1;   // how deep the casing is compared with its width; the Box shape is shallower
   speaker.add(topSec, sleeve, bottomSec);
   const planes = {
     top: new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), midLo: new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
@@ -1344,6 +1346,9 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     offset = 0; layoutCache = null;
     redrawBand();
     buildAddon();
+    // A shape can be shallower than it is wide: squash the casing's depth (not the base).
+    bodyDepth = L.depth || 1;
+    [topSec, bottomSec].forEach(g => g.scale.z = bodyDepth);
     buildSpeakerParts(L);
   }
   // The speaker model's own parts: a round speaker grille on each side that is not the screen, and four
@@ -1355,7 +1360,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     }
     const ex = speaker.userData.extras;
     ex.side.clear(); ex.top.clear();
-    if (L.id !== "speaker") return;
+    if (L.id !== "speaker" && L.id !== "box") return;
     if (!ex.grille) {
       // Dots on a dark disc, like the holes of a real speaker grille.
       ex.grille = new THREE.MeshStandardMaterial({ roughness: 0.6, metalness: 0.3, color: 0xffffff, map: canvasTex(256, 256, (g, w, h) => {
@@ -1779,7 +1784,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     openE += ((state.open ? 1 : 0) - openE) * Math.min(1, dt * 2.2);
     const ease = x => x * x * (3 - 2 * x), e1 = ease(Math.min(1, openE / 0.5)), e2 = ease(Math.max(0, (openE - 0.4) / 0.6));
     const topOff = 0.5 * e1, slOff = 0.3 * e2, botOff = -0.14 * e1;
-    topSec.position.y = topOff; sleeve.position.y = slOff; sleeve.scale.set(1 + 0.04 * e2, 1, 1 + 0.04 * e2);
+    topSec.position.y = topOff; sleeve.position.y = slOff; sleeve.scale.set(1 + 0.04 * e2, 1, (1 + 0.04 * e2) * bodyDepth);
     bottomSec.position.y = botOff; baseGroup.position.y = botOff;
     const Lk = state.look, cutHi = Lk.bandY + Lk.bandH / 2 + 0.035, cutLo = Lk.bandY - Lk.bandH / 2 - 0.035;
     planes.top.constant = -(cutHi + topOff); planes.midLo.constant = -(cutLo + slOff);
