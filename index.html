@@ -305,13 +305,18 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
           <div class="looks" id="looks"></div>
           <p class="desc" id="lookNote" hidden></p>
         </div>
-        <div class="group">
+        <div class="group" id="powerGroup" hidden>
+          <div class="label">Power Speaker colour</div>
+          <div class="swatches" id="powerColours"></div>
+          <p class="desc" id="powerDesc"></p>
+        </div>
+        <div class="group" id="addonGroup">
           <div class="label">Add-on on top</div>
           <div class="seg" id="addons"></div>
           <div><button class="toggle" id="kaabaSpin" aria-pressed="false" hidden>Turn the Kaaba slowly</button></div>
           <p class="desc">Add-ons click on with magnets and metal contacts that power the lights inside them: the domes glow like lamps, small lights circle the Kaaba like tawaf, and the lantern flickers softly.</p>
         </div>
-        <div class="group">
+        <div class="group" id="casingGroup">
           <div class="label">Casing</div>
           <div class="seg" id="finishes"></div>
           <div class="swatches" id="casings"></div>
@@ -588,6 +593,17 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
   buttons($("finishes"), FINISHES, f => f[1] === state.finish, f => { state.finish = f[1]; paintCasing(); }, (b, f) => { b.id = "finish-" + f[1]; b.textContent = f[0]; });
   buttons($("casings"), CASINGS, c => c[1] === state.casing, c => { state.casing = c[1]; state.casingGlow = c[2]; $("casingDesc").textContent = c[3]; paintCasing(); }, (b, c) => swatch(b, c, "casing"));
   $("casingDesc").textContent = CASINGS[0][3];
+  // The Power Speaker's own colours: a painted metal body, not fabric, so the fabric casings do not apply to it.
+  const POWER_COLOURS = [
+    ["Graphite", "#2a2d30", "Graphite: dark grey satin metal, like a studio subwoofer."],
+    ["Midnight", "#121314", "Midnight: deep black, so the screen and the body read as one piece."],
+    ["Gunmetal blue", "#2e3944", "Gunmetal blue: a cool blue-grey metal."],
+    ["Forest green", "#1f3a30", "Forest green: a deep green, quiet in a family room."],
+    ["Sand", "#b8ac96", "Sand: a warm light stone colour that sits well beside wooden furniture."],
+  ];
+  state.power = POWER_COLOURS[0];
+  buttons($("powerColours"), POWER_COLOURS, c => c === state.power, c => { state.power = c; DARK_GREY.set(c[1]).convertSRGBToLinear(); $("powerDesc").textContent = c[2]; }, (b, c) => swatch(b, c, "power"));
+  $("powerDesc").textContent = POWER_COLOURS[0][2];
   buttons($("woods"), WOODS, w => w === state.wood, w => { state.wood = w; topTex.redraw(); woodTex.redraw(); makerTex.redraw(); }, (b, w) => { b.id = "wood-" + w[0]; b.textContent = w[0]; });
   showLayout();
 
@@ -1375,6 +1391,9 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     [topSec, bottomSec].forEach(g => { g.scale.x = bodyWidth; g.scale.z = bodyDepth; });
     // The flat black shapes have no wooden top, add-on or base: the box stands on its own bottom.
     plate.visible = addon.visible = baseGroup.visible = !L.flat;
+    // The app shows the Power Speaker's colours for it, and the fabric and add-on choices for the others.
+    $("powerGroup").hidden = L.id !== "power";
+    $("addonGroup").hidden = $("casingGroup").hidden = !!L.flat;
     // The light ring lies flat on the top; stretch it back so the squashed casing does not make it an oval.
     ring.scale.set(t / bodyWidth, t / bodyDepth, t);
     buildSpeakerParts(L);
@@ -1389,8 +1408,8 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     ex.side.clear(); ex.top.clear();
     if (L.id === "power") buildPowerParts(ex);
   }
-  // The Power Speaker, after a studio subwoofer: one big woofer on each side under dark acoustic cloth, set back
-  // from the front so a clean band of casing runs before it, and four slim metal keys on the top.
+  // The Power Speaker, after a studio subwoofer: one big woofer in the centre of each side under dark acoustic
+  // cloth, and four slim metal keys on the top.
   // The casing is squashed to make the box narrow and shallow, so each round part is stretched back to stay round.
   function buildPowerParts(ex) {
     if (!ex.cloth) {
@@ -1409,7 +1428,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
       ex.key = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x3a3d40).convertSRGBToLinear(), roughness: 0.28, metalness: 0.75 });
     }
     const sx = 1 / bodyWidth, sz = 1 / bodyDepth;
-    const rad = 0.215, zc = -0.045 * sz, yc = -0.02;   // big, a little behind the middle of the side
+    const rad = 0.215, zc = 0, yc = 0;   // big, in the centre of the side
     [[-1, -Math.PI / 2], [1, Math.PI / 2]].forEach(([s, ry]) => {
       const disc = new THREE.Mesh(new THREE.CircleGeometry(rad, 96), ex.cloth);
       const rim = new THREE.Mesh(new THREE.RingGeometry(rad, rad + 0.007, 96), ex.rim);
