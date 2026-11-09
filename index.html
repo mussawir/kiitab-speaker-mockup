@@ -1,0 +1,1826 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Kiitab Quran Speaker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Figtree:wght@400;500;600&family=Reem+Kufi:wght@500;600&display=swap">
+<style>
+/* Layout: a product study. The speaker on a dark stage with its controls beside it, then what goes inside. */
+:root {
+  --bg: #edefea; --surface: #f7f8f5; --fg: #18211d; --muted: #59655e; --line: #d4d9d2;
+  --accent: #8f6419; --accent-2: #0f6b4f; --chip: #e3e7e0; --card: #ffffff;
+  --display: "Reem Kufi", "Segoe UI", system-ui, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --arabic: "Amiri", "Traditional Arabic", serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1412; --surface: #161d1a; --fg: #e6ebe7; --muted: #97a39c; --line: #27312c;
+  --accent: #d9a84e; --accent-2: #45c993; --chip: #1f2823; --card: #1b2521; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1412; --surface: #161d1a; --fg: #e6ebe7; --muted: #97a39c; --line: #27312c;
+  --accent: #d9a84e; --accent-2: #45c993; --chip: #1f2823; --card: #1b2521; color-scheme: dark }
+
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+h1 { font: 600 clamp(26px, 4vw, 38px)/1.1 var(--display); margin: 0; letter-spacing: .2px; text-wrap: balance; }
+h1 .ar { font-family: var(--arabic); font-weight: 700; color: var(--accent); margin-inline-start: 10px; }
+.sub { color: var(--muted); margin: 0; max-width: 62ch; }
+.tag { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-2); font-weight: 600; }
+
+.studio { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .studio { grid-template-columns: minmax(0, 1fr); } }
+.stagecol { display: grid; gap: 12px; min-width: 0; position: sticky; top: env(safe-area-inset-top, 0px); }
+@media (max-width: 860px) { .stagecol { position: static; } }
+.stage { position: relative; border-radius: 18px; overflow: hidden; aspect-ratio: 1 / 1; max-width: 100%;
+  background: radial-gradient(120% 90% at 50% 35%, #26302b 0%, #121714 55%, #0a0d0b 100%); }
+.stage canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.stage canvas:active { cursor: grabbing; }
+.stage .hint { position: absolute; left: 14px; bottom: 12px; font-size: 12px; color: #b9c6bf; opacity: .8; }
+.stage .now { position: absolute; left: 14px; top: 12px; right: 14px; font-size: 13px; color: #e6efe9; }
+.stage .now b { color: #f3cf86; font-weight: 600; }
+.stage .steps { position: absolute; left: 14px; right: 14px; bottom: 48px; font-size: 12.5px; color: #f3cf86; }
+.views { position: absolute; right: 12px; bottom: 10px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.views button { font: 500 12.5px var(--body); color: #e6efe9; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16);
+  border-radius: 999px; padding: 6px 11px; cursor: pointer; }
+.views button[aria-pressed="true"] { background: #e6efe9; color: #111815; }
+
+/* The stage and the remote side by side; the remote drops under the stage on a narrow screen. */
+.stagerow { display: grid; grid-template-columns: minmax(0, 1fr) 118px; gap: 14px; align-items: center; }
+@media (max-width: 560px) { .stagerow { grid-template-columns: minmax(0, 1fr); justify-items: center; } }
+.stage .toast { position: absolute; left: 50%; top: 44px; transform: translate(-50%, -6px); background: rgba(10,14,12,.78); color: #f3ead6;
+  font: 600 13px var(--body); padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(243,207,134,.35); opacity: 0;
+  transition: opacity .2s, transform .2s; pointer-events: none; white-space: nowrap; }
+.stage .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- The remote: a soft ivory pebble with dark rubber buttons ---------- */
+.remote { width: 118px; padding: 16px 12px 14px; border-radius: 60px / 44px; display: grid; gap: 10px; justify-items: center;
+  background: linear-gradient(160deg, #fbf8f1 0%, #ece5d6 60%, #ddd4c1 100%);
+  box-shadow: 0 16px 30px rgba(0,0,0,.28), inset 0 2px 1px rgba(255,255,255,.9), inset 0 -3px 6px rgba(0,0,0,.12); }
+.rled { width: 6px; height: 6px; border-radius: 50%; background: #6c6658; box-shadow: inset 0 1px 1px rgba(0,0,0,.4); transition: background .08s, box-shadow .08s; }
+.rled.on { background: #ffd27a; box-shadow: 0 0 8px 2px rgba(255,190,90,.8); }
+.rgrid { display: grid; grid-template-columns: repeat(3, 28px); gap: 9px 8px; justify-items: center; align-items: center; }
+.rgrid button { width: 28px; height: 28px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; display: grid; place-items: center;
+  background: radial-gradient(circle at 40% 30%, #3d4441, #222725 70%); color: #efe7d4;
+  box-shadow: 0 2px 3px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12); transition: transform .06s; }
+.rgrid button:active, .rgrid button.down { transform: scale(.9); box-shadow: 0 1px 1px rgba(0,0,0,.35); }
+.rgrid button svg { width: 14px; height: 14px; }
+.rgrid .r-power { grid-column: 1 / -1; background: radial-gradient(circle at 40% 30%, #7d3a33, #55211c 70%); }
+.rgrid .r-play { width: 36px; height: 36px; box-shadow: 0 0 0 3px #c9a055, 0 3px 4px rgba(0,0,0,.35); }
+.rgrid .r-play svg { width: 16px; height: 16px; }
+.rgrid .r-word { width: 32px; height: 20px; border-radius: 10px; font: 700 8.5px var(--body); letter-spacing: .03em; }
+.rgrid .r-talk { grid-column: 1; }
+.rgrid .r-turn { grid-column: 3; }
+.rgrid .r-on { box-shadow: 0 0 0 2px #45c993, 0 2px 3px rgba(0,0,0,.35); }
+.rbrand { display: grid; justify-items: center; color: #8a7a58; line-height: 1.1; margin-top: 2px; }
+.rbrand b { font: 600 13px var(--display); letter-spacing: .04em; }
+.rbrand span { font: 700 14px var(--arabic); }
+.rnote { font-size: 11px; color: var(--muted); text-align: center; max-width: 118px; margin: 0; line-height: 1.35; }
+.remotecol { display: grid; gap: 8px; justify-items: center; }
+
+.looks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.phone { justify-self: center; width: 100%; max-width: 430px; background: var(--surface); border: 9px solid #121614; border-radius: 40px;
+  padding: 10px 14px 20px; display: grid; gap: 14px; align-content: start; box-shadow: 0 18px 40px rgba(0,0,0,.16); min-width: 0; box-sizing: border-box; }
+.phone *, .remote { box-sizing: border-box; }
+.phone svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.notch { justify-self: center; width: 84px; height: 6px; border-radius: 6px; background: var(--line); }
+.phone-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 2px 4px 0; }
+.phone-top b { font: 600 22px var(--display); display: block; }
+.phone-top .where { font-size: 12px; color: var(--accent-2); display: inline-flex; align-items: center; gap: 6px; }
+.phone-top .where::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.phone-top .where.asleep { color: var(--muted); }
+.power { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--accent-2);
+  display: grid; place-items: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.08); flex: none; }
+.power svg { width: 20px; height: 20px; }
+.power[aria-pressed="true"] { color: var(--muted); background: var(--chip); }
+
+/* Now playing: what the speaker is doing, with the controls a family uses most. */
+.player { border-radius: 22px; padding: 16px 16px 14px; display: grid; gap: 10px; color: #f3ead6; position: relative; overflow: hidden;
+  background: radial-gradient(120% 120% at 85% 0%, #2f5b49 0%, #173a2d 45%, #0f2a20 100%); box-shadow: 0 10px 24px rgba(15,42,32,.28); }
+.player::after { content: ""; position: absolute; right: -36px; top: -36px; width: 140px; height: 140px; opacity: .12; pointer-events: none;
+  background: conic-gradient(from 22.5deg, #f3cf86 0 12.5%, transparent 0 25%, #f3cf86 0 37.5%, transparent 0 50%, #f3cf86 0 62.5%, transparent 0 75%, #f3cf86 0 87.5%, transparent 0);
+  border-radius: 50%; }
+.pl-ar { font: 700 26px/1.2 var(--arabic); color: #f3cf86; text-align: right; }
+.pl-title { font: 600 15px var(--body); }
+.pl-sub { font-size: 12.5px; color: rgba(243,234,214,.7); margin-top: -6px; }
+.pl-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.16); overflow: hidden; }
+.pl-bar i { display: block; height: 100%; width: 0; background: #f3cf86; border-radius: 2px; transition: width .4s; }
+.pl-ctrl { display: flex; justify-content: space-between; align-items: center; padding: 2px 4px; }
+.pl-ctrl button { width: 38px; height: 38px; border-radius: 50%; border: 0; background: none; color: #f3ead6; cursor: pointer; display: grid; place-items: center; }
+.pl-ctrl button svg { width: 21px; height: 21px; }
+.pl-ctrl .big { width: 54px; height: 54px; background: #f3cf86; color: #10291f; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
+.pl-ctrl .big svg { width: 24px; height: 24px; }
+.pl-ctrl button[aria-pressed="true"] { color: #f3cf86; background: rgba(243,207,134,.14); }
+.pl-vol { display: flex; align-items: center; gap: 10px; color: rgba(243,234,214,.75); }
+.pl-vol svg { width: 17px; height: 17px; flex: none; }
+.pl-vol input { flex: 1; accent-color: #f3cf86; min-width: 0; }
+.player.asleep { background: linear-gradient(160deg, #2a302d, #191d1b); box-shadow: none; }
+.player.asleep .pl-ar { color: rgba(243,207,134,.45); }
+.player.asleep .pl-ctrl, .player.asleep .pl-vol, .player.asleep .pl-bar { opacity: .35; pointer-events: none; }
+/* The microphone: the phone is the mic. While it listens it glows and pulses, and the volume shows the speaker turned down. */
+.pl-ctrl .mic { background: rgba(243,207,134,.16); }
+.pl-ctrl .mic[aria-pressed="true"] { background: #f3cf86; color: #10291f; animation: hear 1.1s ease-in-out infinite; }
+@keyframes hear { 0%, 100% { box-shadow: 0 0 0 0 rgba(243,207,134,.55); } 50% { box-shadow: 0 0 0 9px rgba(243,207,134,0); } }
+@media (prefers-reduced-motion: reduce) { .pl-ctrl .mic[aria-pressed="true"] { animation: none; } }
+.player.hearing .pl-vol { opacity: .45; }
+.pl-chat { display: grid; gap: 6px; font-size: 13px; }
+.pl-chat .me { justify-self: end; background: rgba(243,207,134,.2); color: #fbefd2; padding: 6px 10px; border-radius: 12px 12px 3px 12px; }
+.pl-chat .it { justify-self: start; background: rgba(255,255,255,.1); padding: 6px 10px; border-radius: 12px 12px 12px 3px; }
+/* The speaker's question after a topic is picked, with quick answers. */
+.ask { border: 1px solid var(--accent-2); border-radius: 14px; padding: 10px 12px; display: grid; gap: 8px; background: var(--surface); }
+.askq { margin: 0; display: grid; gap: 2px; }
+.askq span { font-size: 11.5px; color: var(--accent-2); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.askq b { font: 600 15px var(--body); }
+.ask .seg button { font-size: 13px; padding: 6px 11px; }
+.rtop { display: flex; gap: 8px; align-items: center; }
+.rmic { width: 12px; height: 5px; border-radius: 3px; background: repeating-linear-gradient(90deg, #6c6658 0 1.5px, transparent 1.5px 3px); }
+
+.tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; background: var(--chip); border-radius: 14px; padding: 4px; }
+.tabs button { font: 600 12px var(--body); color: var(--muted); background: none; border: 0; border-radius: 10px; padding: 7px 2px 6px; cursor: pointer;
+  display: grid; justify-items: center; gap: 2px; }
+.tabs button svg { width: 18px; height: 18px; }
+.tabs button[aria-selected="true"] { background: var(--card); color: var(--accent-2); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.pane { display: grid; gap: 12px; }
+.pane > .group { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
+[hidden] { display: none !important; }
+.modegrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.modegrid button { display: grid; justify-items: center; gap: 4px; padding: 10px 4px 8px; border-radius: 14px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--fg); font: 600 12px var(--body); cursor: pointer; min-width: 0; }
+.modegrid button svg, .modegrid button .glyph { width: 22px; height: 22px; color: var(--accent-2); }
+.modegrid button .glyph { font: 700 15px/22px var(--arabic); stroke: none; }
+.modegrid button[aria-pressed="true"] { background: var(--accent-2); border-color: var(--accent-2); color: #fff; }
+.modegrid button[aria-pressed="true"] svg, .modegrid button[aria-pressed="true"] .glyph { color: #fff; }
+.looks button { text-align: left; font: 400 13px/1.35 var(--body); color: var(--muted); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; padding: 10px 12px; cursor: pointer; display: grid; gap: 2px; min-width: 0; }
+.looks button b { font: 600 15px var(--display); color: var(--fg); }
+.looks button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+@media (max-width: 480px) { .looks button span { display: none; } }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 16px; }
+.group { display: grid; gap: 8px; }
+.label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { font: 500 14px var(--body); color: var(--fg); background: var(--chip); border: 1px solid transparent;
+  border-radius: 999px; padding: 7px 13px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.sw { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); cursor: pointer; padding: 0; }
+.sw[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--fg); }
+/* On/off settings look like phone switches: the words on the left, the switch on the right. */
+.toggle { display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 12px; text-align: left;
+  font: 500 14px var(--body); color: var(--fg); background: none; border: 0; padding: 4px 0; cursor: pointer; }
+.toggle::after { content: ""; flex: none; width: 42px; height: 25px; border-radius: 13px; transition: background .2s;
+  background: radial-gradient(circle at 12.5px 12.5px, #fff 9.5px, transparent 10.5px), var(--line); }
+.toggle[aria-pressed="true"]::after { background: radial-gradient(circle at 29.5px 12.5px, #fff 9.5px, transparent 10.5px), var(--accent-2); }
+.sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+.sides label { display: grid; gap: 3px; font-size: 12.5px; color: var(--muted); min-width: 0; }
+.sides select { font: 500 14px var(--body); color: var(--fg); background: var(--chip); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-width: 0; }
+.desc { margin: 0; color: var(--muted); font-size: 14px; }
+.note { font-size: 12.5px; color: var(--muted); margin: 0; border-top: 1px solid var(--line); padding-top: 12px; }
+
+h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
+.inside { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 860px) { .inside { grid-template-columns: minmax(0, 1fr); } }
+.inside section { min-width: 0; }
+.inside h3 { font: 600 15px var(--body); margin: 0 0 10px; color: var(--accent-2); }
+.inside ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.inside li { padding-left: 16px; position: relative; }
+.inside li::before { content: ""; position: absolute; left: 0; top: .62em; width: 7px; height: 7px; transform: rotate(45deg); border: 1.5px solid var(--accent); }
+.inside li b { font-weight: 600; }
+.design { display: grid; gap: 8px; max-width: 75ch; }
+.design p { margin: 0; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="tag">Kiitab · first model · design study</div>
+      <h1>Kiitab Quran Speaker <span class="ar" lang="ar">كتاب</span></h1>
+    </div>
+    <p class="sub">A speaker for the family room. Its screen hides behind the casing and the words glow through it, and a slow-turning base shows every side. Beside it is the Kiitab app: the one control tool for the speaker on the desktop, on the phone, and the real speaker later.</p>
+  </header>
+
+  <div class="studio">
+    <div class="stagecol">
+      <div class="stagerow">
+      <div class="stage">
+        <canvas id="view" aria-label="3D model of the Kiitab Quran speaker"></canvas>
+        <div class="now" id="now"></div>
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+        <div class="steps" id="steps" hidden>1 · Lift off the top &nbsp; 2 · Slide off the cover with its screen borders &nbsp; 3 · Slide on the new cover and put the top back</div>
+        <div class="hint">Drag to turn and tilt</div>
+        <div class="views" id="views"></div>
+      </div>
+      <div class="remotecol">
+        <div class="remote" aria-label="Kiitab remote control">
+          <span class="rtop"><span class="rmic" title="The remote's own microphone"></span><span class="rled" id="rled"></span></span>
+          <div class="rgrid" id="remote"></div>
+          <div class="rbrand"><b>Kiitab</b><span lang="ar">كتاب</span></div>
+        </div>
+        <p class="rnote">The remote: 12 buttons, Bluetooth, for anyone without the app. Try it.</p>
+      </div>
+      </div>
+    </div>
+
+    <div class="phone" aria-label="Kiitab phone app">
+      <div class="notch"></div>
+      <div class="phone-top">
+        <div><b>Kiitab</b><span class="where" id="where">Living room speaker</span></div>
+        <button class="power" id="standby" aria-pressed="false" aria-label="Standby"></button>
+      </div>
+      <div class="player" id="player">
+        <div class="pl-ar" lang="ar" id="plAr"></div>
+        <div class="pl-title" id="plTitle"></div>
+        <div class="pl-sub" id="plSub"></div>
+        <div class="pl-bar"><i id="plBar"></i></div>
+        <div class="pl-chat" id="plChat" hidden aria-live="polite"></div>
+        <div class="pl-ctrl" id="plCtrl"></div>
+        <label class="pl-vol"><span id="volLo"></span><input type="range" id="vol" min="0" max="10" step="1" aria-label="Volume"><span id="volHi"></span></label>
+      </div>
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div class="pane" data-pane="now" role="tabpanel">
+        <div class="group">
+          <div class="label">Topics</div>
+          <p class="desc">Each card is a topic. Tap one and the speaker asks what you want. Then tap the microphone above to talk about that topic only. Stop, louder, softer, standby and "go to" another card always work.</p>
+          <div class="modegrid" id="modes"></div>
+          <div class="ask" id="ask" hidden>
+            <p class="askq"><span>The speaker asks</span><b id="askQ"></b></p>
+            <div class="seg" id="askChips"></div>
+          </div>
+          <p class="desc" id="modeDesc"></p>
+          <button class="toggle" id="tour" aria-pressed="false">Show every screen, one after another</button>
+        </div>
+        <div class="group">
+          <div class="label">Standby</div>
+          <p class="desc">The power button above puts the speaker to sleep: screen and lights off, one tiny dim light on the top ring. It wakes from the app, the remote, or its name. The switch underneath turns the power off completely.</p>
+          <button class="toggle" id="adhanWake" aria-pressed="true">Wake for the adhan</button>
+        </div>
+        <div class="group">
+          <div class="label">Turning base</div>
+          <button class="toggle" id="spin" aria-pressed="false">Turn by itself</button>
+        </div>
+      </div>
+      <div class="pane" data-pane="screen" role="tabpanel" hidden>
+        <p class="desc" id="screenNote" hidden></p>
+        <div class="group" id="layoutGroup">
+          <div class="label">Layout while reciting</div>
+          <div class="seg" id="layouts"></div>
+          <p class="desc" id="layoutDesc"></p>
+          <div class="sides" id="sides" hidden></div>
+        </div>
+        <div class="group" id="framesGroup">
+          <div class="label">Mihrab frames</div>
+          <div><button class="toggle" id="frames" aria-pressed="false">Draw mihrab arches on the screen</button></div>
+          <p class="desc">The screen stays one whole screen around the speaker. The arches are drawn on it, around what each side shows.</p>
+        </div>
+        <div class="group" id="screensGroup">
+          <div class="label">Screen</div>
+          <div class="seg" id="screens"></div>
+          <p class="desc" id="screenDesc"></p>
+        </div>
+      </div>
+      <div class="pane" data-pane="light" role="tabpanel" hidden>
+        <div class="group">
+          <div class="label">Light inside</div>
+          <div class="seg" id="levels"></div>
+          <div class="swatches" id="leds"></div>
+          <div><button class="toggle" id="cycle" aria-pressed="false">Change colours slowly</button></div>
+          <p class="desc">The light shines through the casing and colours it. Turn it off and the casing shows its own colour.</p>
+        </div>
+        <div class="group">
+          <div class="label">Light pattern</div>
+          <div class="seg" id="patterns"></div>
+          <div class="label">Pattern colours</div>
+          <div class="seg" id="palettes"></div>
+          <div><button class="toggle" id="move" aria-pressed="false">Move the pattern slowly</button></div>
+          <p class="desc">Patterns are made of light by small colour LEDs behind the casing, each one its own colour, so nothing is printed. Flowers turn, ribbons flow and the colours slowly change. With the light off the casing is plain, and at night the pattern takes the warm night light.</p>
+        </div>
+      </div>
+      <div class="pane" data-pane="speaker" role="tabpanel" hidden>
+        <div class="group">
+          <div class="label">Shape</div>
+          <div class="looks" id="looks"></div>
+          <p class="desc" id="lookNote" hidden></p>
+        </div>
+        <div class="group">
+          <div class="label">Add-on on top</div>
+          <div class="seg" id="addons"></div>
+          <div><button class="toggle" id="kaabaSpin" aria-pressed="false" hidden>Turn the Kaaba slowly</button></div>
+          <p class="desc">Add-ons click on with magnets and metal contacts that power the lights inside them: the domes glow like lamps, small lights circle the Kaaba like tawaf, and the lantern flickers softly.</p>
+        </div>
+        <div class="group">
+          <div class="label">Casing</div>
+          <div class="seg" id="finishes"></div>
+          <div class="swatches" id="casings"></div>
+          <p class="desc" id="casingDesc"></p>
+        </div>
+        <div class="group">
+          <div class="label">Changing the cover</div>
+          <div><button class="toggle" id="opencover" aria-pressed="false">Show how the cover comes off</button></div>
+          <p class="desc">When the cover gets old or scratched, or you want a new colour: lift off the top, slide off the cover with its screen borders, and slide on a new one. The screen and the frame inside stay in place.</p>
+        </div>
+        <div class="group">
+          <div class="label">Wood, top and base</div>
+          <div class="seg" id="woods"></div>
+        </div>
+      </div>
+      <p class="note">Sample text on the screen: Surah Al-Fatiha, ayahs 1–4, with the Sahih International translation. Prayer times and the story are examples. The speaker never plays music. In the real speaker every ayah, translation and explanation comes from a named, authentic source, and the AI never writes them itself.</p>
+    </div>
+  </div>
+
+  <div>
+    <h2>What goes inside</h2>
+  </div>
+  <div class="inside">
+    <section>
+      <h3>First model: the hardware</h3>
+      <ul>
+        <li><b>Hidden flexible LED screen</b> behind the casing on all four sides. When it is off, the speaker is one clean object; when it is on, the words glow through.</li>
+        <li><b>Turning base</b> with a quiet motor that slowly turns the speaker, so everyone in the room can read it. The base stays still.</li>
+        <li><b>A grid of small colour LEDs</b> behind the casing, each one its own colour: it colours the casing and draws soft, slowly moving patterns of light (flowers, mandala, ribbons, stars, girih, arabesque) in one colour or many, chosen in the app. Nothing is printed.</li>
+        <li><b>Microphones on top</b>, so you can say "Assalamu alaikum, Ustadh, play Surah Yasin".</li>
+        <li><b>Touch top</b> with play, previous and next ayah, and volume, around a light ring that shows listening and thinking.</li>
+        <li><b>Underneath:</b> a down-facing speaker behind a round grille, four rubber feet, USB-C and a power button that cuts the power completely.</li>
+        <li><b>Standby</b> from the app, the remote or by voice: screen and lights off, one tiny dim light on the ring. It can wake itself for the adhan.</li>
+        <li><b>A Bluetooth remote</b> with 12 buttons for anyone without the app: standby, previous, play/pause, next, volume down and up, repeat ayah, mode, translation language, light, talk and turn-to-face-me. It has its own small microphone, so you can talk from across the room without raising your voice. Bluetooth works from any side, which matters for a speaker that turns.</li>
+        <li><b>Wi-Fi</b> for recitations and translations, <b>Bluetooth</b> for a phone, <b>battery</b>, no fan.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>What it does</h3>
+      <ul>
+        <li><b>Recite, translate, explain</b> in Urdu, Arabic or English, from named sources, with the reference said or shown.</li>
+        <li><b>Bayans</b> from an approved list of scholars, with their own published translation on one side of the screen.</li>
+        <li><b>Screen layouts:</b> a running line, Arabic and translation sides, the same on every side, or four different sides.</li>
+        <li><b>Holy places and stories</b> on the screen: line art of the two Harams and Al-Aqsa, Stories of the Prophets in words.</li>
+        <li><b>Prayer times and adhan</b> for your city, with a gentle light a few minutes before each prayer.</li>
+        <li><b>Hifz mode</b>, <b>night mode</b> with Surah Al-Mulk, <b>respectful mode</b>, and a <b>kids mode</b> with the Kiitab students.</li>
+        <li><b>Phone app</b> to set up the speaker, choose its voice and personality, and pick what each side shows.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Later models</h3>
+      <ul>
+        <li><b>Projector model:</b> a projector inside shows the text on milky panels all around. Premium version.</li>
+        <li><b>Qibla direction</b> on the screen, with a compass chip inside.</li>
+        <li><b>Same brain as the app:</b> the 3D speaker on a phone or laptop behaves exactly like the real one.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="design">
+    <h2>Never on this speaker</h2>
+    <p>No music and no musical instruments, in any mode. No songs, no background tunes, no jingles, not even a startup tune: only recitation, the spoken voice and soft clicks. Nothing haram on the screen or in the voice: no pictures of the prophets or the companions, no ads. Stories are told in words. The rule is written into the speaker's character file, so the brain cannot switch music on even if someone asks for it.</p>
+  </div>
+
+  <div class="design">
+    <h2>Shapes, patterns and the control tool</h2>
+    <p><b>Classic</b> is a rounded square framed by wood at the top and the base, with thin brass rings around the hidden screen. <b>Mihrab</b> narrows gently towards the top like a lantern. In both, the screen is one whole screen all the way round; mihrab arches can be drawn on it around what each side shows.</p>
+    <p><b>Simpler screens, lower prices.</b> <b>Front screen</b> has one solid flat screen on the front only, framed in brass, so the light inside never shows through it, and plain fabric on the other three sides: it costs less and suits a shelf against a wall. <b>Small display</b> has no screen, only a little dot-matrix LCD on the front with two short lines (surah and ayah, next prayer, the time, the dhikr count), so it never shows the verse itself. <b>Plain</b> has no screen at all: it says everything out loud, and its light ring and the light inside the casing show listening, reciting and prayer time. All three keep the same casing, light patterns, add-ons, cover and app.</p>
+    <p><b>Patterns are light, not print.</b> A grid of small LEDs behind the casing draws stars, girih or arabesque, softened by the fabric or frosted plastic. They change from the app and disappear when the light is off. For a different colour or texture, the casing itself can be a slip-on cover held by magnets.</p>
+    <p><b>A cover you can change.</b> The fabric (linen, cotton or canvas) or frosted plastic is a sleeve with the screen's brass borders attached. Twist off the top section, slide the old sleeve up and off, and slide on a new one; the bottom section comes off the same way for cleaning. The screen and the frame inside never move, so a new cover is cheap and safe to fit at home.</p>
+    <p><b>Add-ons on top.</b> A dome in the style of Masjid an-Nabawi, four minarets, both, a golden dome, the Kaaba on its mataf, or a Ramadan lantern. Each has its own lights inside. Each clicks onto the wooden top with magnets and a few metal contacts that power its lights, so the dome glows softly with the speaker's light and the minarets' balconies light up. They are sold separately, so a family can change the look of the speaker over the years.</p>
+    <p><b>Topics and the microphone.</b> The cards in the app are topics: Recite, Bayan, Dhikr, Qaida, Stories and more, and later Arabic grammar, vocabulary and a discussion topic. Tap one and the speaker asks what you want (for Recite: which surah, which ayahs or which subject, and which translation). To talk to it, tap the microphone in the app or on the remote: the phone or the remote is the microphone, so you never have to shout over the recitation. While you talk the speaker turns itself down and its own microphone is off, and it understands what you say only within the topic that is on, which makes it far less likely to mishear. It stops listening by itself when you stop talking. A few things always work: stop, louder, softer, standby, and "go to" another topic.</p>
+    <p><b>One control tool.</b> The Kiitab app beside the speaker is the same tool everywhere: next to the 3D speaker on the desktop, as the phone app, and for the real speaker over Wi-Fi or Bluetooth. Every button sends the same message to the brain, so the speaker never needs to be touched.</p>
+    <p>All text uses the Mushaf-style Quran script with the traditional ayah markers, and warm white is the first light colour.</p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  // ---------- Content ----------
+  const AYAHS = [
+    { ar: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", en: "In the name of Allah, the Entirely Merciful, the Especially Merciful.", n: "١" },
+    { ar: "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ", en: "[All] praise is [due] to Allah, Lord of the worlds", n: "٢" },
+    { ar: "الرَّحْمَٰنِ الرَّحِيمِ", en: "The Entirely Merciful, the Especially Merciful", n: "٣" },
+    { ar: "مَالِكِ يَوْمِ الدِّينِ", en: "Sovereign of the Day of Recompense.", n: "٤" },
+  ];
+  const WORDS = [];
+  AYAHS.forEach((a, ai) => a.ar.split(" ").forEach((w, i, all) => WORDS.push({ ai, i, last: i === all.length - 1 })));
+  const LOOKS = [
+    { id: "classic", name: "Classic", line: "Rounded square, wood and brass", taper: 0, bandH: 0.5, bandY: 0.02, screen: "wrap" },
+    { id: "mihrab", name: "Mihrab", line: "Narrows like a lantern, arches on the screen", taper: 0.14, bandH: 0.6, bandY: 0.0, arches: true, screen: "wrap" },
+    { id: "front", name: "Front screen", line: "One screen on the front only, the other sides plain fabric", taper: 0, bandH: 0.5, bandY: 0.02, screen: "front" },
+    { id: "lcd", name: "Small display", line: "A little LCD on the front: surah, ayah, time, count", taper: 0, bandH: 0.13, bandY: 0.14, screen: "lcd" },
+    { id: "plain", name: "Plain", line: "No screen at all: it speaks, and its light shows what it is doing", taper: 0, bandH: 0.5, bandY: 0.02, screen: "none" },
+  ];
+  // What each kind of screen can show, said in the app under the shape.
+  const SCREEN_NOTES = {
+    front: "One solid screen on the front, set into the casing: the light inside the speaker never shows through it, whatever the casing or light colour. It shows one side at a time, so the layouts for four sides are not needed; turn the speaker to face you.",
+    lcd: "A small LCD, not a screen: two short lines of light dots on the front. It shows the surah and ayah, the next prayer, the time or the dhikr count, never the whole verse. The cheapest model.",
+    none: "No screen at all. Everything it does, it says out loud, and the light ring and the light inside the casing show listening, reciting and prayer time.",
+  };
+  const MODES = [
+    { id: "recite", name: "Recite", desc: "Plays the recitation. Each word lights up as it is said, with the translation beside or under it." },
+    { id: "listen", name: "Listen", desc: "Someone greeted it. The top ring spins while it listens, and the screen shows what it heard." },
+    { id: "bayan", name: "Bayan", desc: "A bayan from an approved scholar. The front and back show who and what, with the sound moving; the sides show the scholar's own published translation." },
+    { id: "dhikr", name: "Dhikr", desc: "Counts dhikr with you: SubhanAllah, Alhamdulillah and Allahu Akbar, 33 each, with a bead lit for every count." },
+    { id: "timer", name: "Timer", desc: "A Quran reading timer. When it ends, a spoken reminder, never a tune." },
+    { id: "prayer", name: "Prayer time", desc: "Shows the next prayer and the time left. A few minutes before the adhan the light slowly brightens." },
+    { id: "places", name: "Holy places", desc: "Masjid al-Haram, Masjid an-Nabawi and Al-Aqsa, one after another, with their names, while the speaker tells about them." },
+    { id: "qaida", name: "Qaida", desc: "Noorani Qaida for children: each letter lights up and is said, one after another." },
+    { id: "stories", name: "Stories", desc: "Stories of the Prophets told in words, a chapter at a time. The screen shows the title and the words, never pictures of the prophets." },
+    { id: "respect", name: "Respectful", desc: "Shows only the surah name and ayah number, never the verse itself. For a speaker that sits low or in a shared room." },
+    { id: "night", name: "Night", desc: "Warm, dim light and a sleep timer. Plays Surah Al-Mulk, then turns itself off." },
+  ];
+  const LAYOUTS = [
+    { id: "run", name: "Running line", desc: "One long line around the speaker: Arabic above, translation below. The word being recited glides to the side facing you." },
+    { id: "split", name: "Arabic and translation sides", desc: "The front and back show the Arabic, word by word. The left and right sides show the translation." },
+    { id: "all", name: "Same on every side", desc: "Every side shows the ayah and its translation, so it reads from anywhere in the room." },
+    { id: "four", name: "Four different sides", desc: "Choose what each side shows. Turn the speaker, or press Turn by itself, to see all four." },
+  ];
+  const SIDES = [["front", "Front"], ["right", "Right"], ["back", "Back"], ["left", "Left"]];
+  const SIDE_KINDS = [["arabic", "Arabic, word by word"], ["english", "Translation"], ["info", "Surah and ayah"], ["prayer", "Next prayer"], ["clock", "Clock and Hijri date"], ["place", "Holy place"]];
+  const SCREENS = [["Hidden", "hidden", "The screen sits behind the casing. The words glow through it, and when it is off you cannot see it at all."], ["Glass panel", "glass", "A dark glass panel you can always see, like the first study. Sharper text, more of a gadget."]];
+  const VIEWS = [
+    { id: "front", name: "Front", elev: 0.16, yaw: -0.35 },
+    { id: "side", name: "Side", elev: 0.1, yaw: -Math.PI / 2 },
+    { id: "top", name: "Top", elev: 1.42, yaw: 0 },
+    { id: "bottom", name: "Bottom", elev: -1.42, yaw: 0 },
+  ];
+  const LEDS = [["Warm white", "#ffcf8f"], ["Gold", "#ffb43a"], ["Amber", "#ff8a3d"], ["Red", "#ff4d5e"], ["Rose", "#ff6f91"], ["Pink", "#ff8fd0"],
+    ["Lilac", "#c9a2ff"], ["Violet", "#9a72ff"], ["Royal blue", "#4a64ff"], ["Ocean", "#3aa8ff"], ["Sky", "#8fd6ff"], ["Teal", "#2ad4c4"], ["Emerald", "#22d38a"], ["Lime", "#b4f05a"]];
+  const CASINGS = [
+    ["White", "#f6f5f1", 1, "Pure white: the cleanest, brightest glow."],
+    ["Ivory", "#ece6d8", 1, "Ivory glows brightest: the light gives it its colour."],
+    ["Deep green", "#1f4a3d", 0.35, "Deep green glows softly, a rich colour even with the light off."],
+    ["Midnight", "#1e2a44", 0.35, "Midnight blue glows softly, calm for a bedroom."],
+    ["Charcoal", "#3a3e3f", 0.2, "Charcoal hardly glows: a quiet casing even with the light on."],
+  ];
+  const FINISHES = [["Linen", "linen"], ["Cotton", "cotton"], ["Canvas", "canvas"], ["Frosted plastic", "plastic"]];
+  // Fabric qualities: thread size, how uneven the threads are, how much light passes, and the gaps between threads.
+  const FAB = {
+    linen: { c: 5, slub: 0.1, glow: 1.15, hole: 2.2, base: "#7a7a7a" },
+    cotton: { c: 4, slub: 0.03, glow: 1, hole: 1.6, base: "#6a6a6a" },
+    canvas: { c: 9, slub: 0.05, glow: 0.62, hole: 2.4, base: "#454545" },
+  };
+  const LEVELS = [["Bright", 1], ["Soft", 0.5], ["Off", 0]];
+  const PATTERNS = [["None", "none"], ["Flowers", "flowers"], ["Mandala", "mandala"], ["Ribbons", "ribbons"], ["Stars", "stars"], ["Girih", "girih"], ["Arabesque", "arabesque"], ["Dots", "dots"]];
+  const PALETTES = [["Light colour", "mono"], ["Rainbow", "rainbow"], ["Garden", "garden"], ["Ocean", "ocean"], ["Emerald and gold", "emerald"]];
+  const PALETTE_SETS = {
+    garden: ["#ff6f91", "#ffb43a", "#22d38a", "#ff8fd0", "#b4f05a", "#ff8a3d"],
+    ocean: ["#3aa8ff", "#2ad4c4", "#9a72ff", "#8fd6ff", "#4a64ff", "#c9a2ff"],
+    emerald: ["#22d38a", "#ffb43a", "#ffcf8f", "#1fa36b", "#ffd76a"],
+  };
+  const ADDONS = [["None", "none"], ["Green dome", "dome"], ["Dome and minarets", "both"], ["Minarets", "minarets"], ["Golden dome", "gold"], ["Kaaba", "kaaba"], ["Ramadan lantern", "lantern"]];
+  const TABS = [["now", "Now"], ["screen", "Screen"], ["light", "Light"], ["speaker", "Speaker"]];
+  const WOODS = [["Walnut", "#6b4a2f", "#4a311d"], ["Oak", "#b8905f", "#8a6a42"], ["Ebony", "#2e2724", "#1b1715"]];
+
+  const state = {
+    look: LOOKS[0], mode: "recite", layout: "run", screen: "hidden",
+    sides: { front: "arabic", right: "english", back: "info", left: "clock" },
+    led: LEDS[0][1], cycle: false, level: 1, pattern: "none", palette: "mono", move: false, frames: false, addon: "none", kaabaSpin: false, tour: false,
+    casing: CASINGS[0][1], casingGlow: 1, finish: "linen", open: false, wood: WOODS[0], spin: false, view: "front",
+  };
+
+  // ---------- Controls ----------
+  const $ = id => document.getElementById(id);
+  function buttons(el, items, isOn, onPick, render) {
+    el.innerHTML = "";
+    const sync = () => [...el.children].forEach((c, j) => c.setAttribute("aria-pressed", String(isOn(items[j]))));
+    items.forEach(it => {
+      const b = document.createElement("button");
+      render(b, it);
+      b.addEventListener("click", () => { onPick(it); sync(); });
+      el.appendChild(b);
+    });
+    sync();
+    return sync;
+  }
+  const swatch = (b, [name, col], what) => { b.className = "sw"; b.id = what + "-" + name.replace(/\s/g, ""); b.style.background = col; b.title = name; b.setAttribute("aria-label", name + " " + what); };
+  buttons($("looks"), LOOKS, l => l === state.look, l => { state.look = l; setFrames(!!l.arches); buildLook(); }, (b, l) => { b.id = "look-" + l.id; b.innerHTML = `<b>${l.name}</b><span>${l.line}</span>`; });
+  // The Screen tab only offers what the chosen shape's screen can do.
+  function syncScreenControls() {
+    const s = state.look.screen, note = SCREEN_NOTES[s] || "";
+    $("layoutGroup").hidden = s !== "wrap";
+    $("framesGroup").hidden = s === "lcd" || s === "none";
+    $("screensGroup").hidden = s !== "wrap";
+    [$("screenNote"), $("lookNote")].forEach(p => { p.textContent = note; p.hidden = !note; });
+  }
+  function setFrames(on) { state.frames = on; $("frames").setAttribute("aria-pressed", String(on)); redrawBand(); }
+  $("frames").addEventListener("click", () => setFrames(!state.frames));
+  buttons($("addons"), ADDONS, a => a[1] === state.addon, a => { state.addon = a[1]; $("kaabaSpin").hidden = a[1] !== "kaaba"; buildAddon(); }, (b, a) => { b.id = "addon-" + a[1]; b.textContent = a[0]; });
+  $("kaabaSpin").addEventListener("click", () => { state.kaabaSpin = !state.kaabaSpin; $("kaabaSpin").setAttribute("aria-pressed", String(state.kaabaSpin)); });
+  $("tour").addEventListener("click", () => { state.tour = !state.tour; tourT = clock; $("tour").setAttribute("aria-pressed", String(state.tour)); });
+  buttons($("patterns"), PATTERNS, q => q[1] === state.pattern, q => { state.pattern = q[1]; glowTex.redraw(); }, (b, q) => { b.id = "pattern-" + q[1]; b.textContent = q[0]; });
+  buttons($("palettes"), PALETTES, p => p[1] === state.palette, p => { state.palette = p[1]; glowTex.redraw(); }, (b, p) => { b.id = "palette-" + p[1]; b.textContent = p[0]; });
+  $("move").addEventListener("click", () => { state.move = !state.move; $("move").setAttribute("aria-pressed", String(state.move)); });
+  // Line icons for the app and the remote, drawn in the current text colour.
+  const svg = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+  const SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  const MIC = '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>';
+  const ICON = {
+    power: '<path d="M12 3v8"/><path d="M6.4 6.4a8 8 0 1 0 11.2 0"/>',
+    play: '<path d="M8 5l11 7-11 7z" fill="currentColor"/>', pause: '<path d="M8.5 5v14M15.5 5v14" stroke-width="3.2"/>',
+    prev: '<path d="M18 6l-8 6 8 6z" fill="currentColor"/><path d="M7 6v12"/>', next: '<path d="M6 6l8 6-8 6z" fill="currentColor"/><path d="M17 6v12"/>',
+    minus: '<path d="M6 12h12"/>', plus: '<path d="M6 12h12M12 6v12"/>',
+    volLo: '<path d="M4 9v6h4l5 4V5L8 9z"/>', volHi: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>',
+    repeat: '<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>',
+    mic: MIC, turn: '<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/>',
+    tab_now: '<circle cx="12" cy="12" r="9"/><path d="M10 8.5l5.5 3.5-5.5 3.5z" fill="currentColor"/>',
+    tab_screen: '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>', tab_light: SUN,
+    tab_speaker: '<rect x="6" y="3" width="12" height="18" rx="3"/><circle cx="12" cy="14" r="3"/><circle cx="12" cy="7.5" r="1"/>',
+    m_recite: '<path d="M4 19.5V5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h13"/><path d="M9 8h6"/>', m_listen: MIC,
+    m_bayan: '<path d="M3 10v4M7 7v10M11 4v16M15 8v8M19 11v2"/>',
+    m_dhikr: '<circle cx="12" cy="4.5" r="1.8"/><circle cx="18.5" cy="8.5" r="1.8"/><circle cx="18.5" cy="15.5" r="1.8"/><circle cx="12" cy="19.5" r="1.8"/><circle cx="5.5" cy="15.5" r="1.8"/><circle cx="5.5" cy="8.5" r="1.8"/>',
+    m_timer: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>',
+    m_prayer: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/><path d="M17 3l.6 1.4L19 5l-1.4.6L17 7l-.6-1.4L15 5l1.4-.6z" fill="currentColor"/>',
+    m_places: '<path d="M3 21h18M6 21v-7a6 6 0 0 1 12 0v7M12 8V4M10 21v-4h4v4"/>',
+    m_stories: '<path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2zM22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>',
+    m_respect: '<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/>', m_night: '<path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/>',
+    mode: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+    lang: '<path d="M4 5h9M8.5 3v2M6 5c1 4 4 7 7 8M11 5c-1 4-4 7-7 8"/><path d="M13 21l4-9 4 9M14.5 18h5"/>', light: SUN,
+  };
+  // The app's tabs
+  TABS.forEach(([id, name]) => {
+    const b = document.createElement("button");
+    b.id = "tab-" + id; b.innerHTML = svg(ICON["tab_" + id]) + name; b.setAttribute("role", "tab");
+    b.addEventListener("click", () => showTab(id));
+    $("tabs").appendChild(b);
+  });
+  function showTab(id) {
+    TABS.forEach(([t]) => $("tab-" + t).setAttribute("aria-selected", String(t === id)));
+    document.querySelectorAll(".pane").forEach(p => p.hidden = p.dataset.pane !== id);
+  }
+  showTab("now");
+  // The cards are topics. Listening is not one of them: it is the microphone button, about whichever topic is on.
+  const TOPICS = MODES.filter(m => m.id !== "listen");
+  const syncModes = buttons($("modes"), TOPICS, m => m.id === state.mode, m => { endListen(false); setMode(m.id); showChat(null); askFor(m.id); }, (b, m) => { b.id = "mode-" + m.id; b.innerHTML = (m.id === "qaida" ? '<span class="glyph" lang="ar">ا ب</span>' : svg(ICON["m_" + m.id])) + `<span>${m.name}</span>`; });
+  buttons($("layouts"), LAYOUTS, l => l.id === state.layout, l => { state.layout = l.id; showLayout(); offset = 0; redrawBand(); }, (b, l) => { b.id = "layout-" + l.id; b.textContent = l.name; });
+  function showLayout() { $("layoutDesc").textContent = LAYOUTS.find(l => l.id === state.layout).desc; $("sides").hidden = state.layout !== "four"; }
+  SIDES.forEach(([id, name]) => {
+    const lab = document.createElement("label"), sel = document.createElement("select");
+    sel.id = "side-" + id; lab.htmlFor = sel.id; lab.append(name + " side", sel);
+    SIDE_KINDS.forEach(([k, txt]) => { const o = document.createElement("option"); o.value = k; o.textContent = txt; sel.appendChild(o); });
+    sel.value = state.sides[id];
+    sel.addEventListener("change", () => { state.sides[id] = sel.value; redrawBand(); });
+    $("sides").appendChild(lab);
+  });
+  buttons($("screens"), SCREENS, s => s[1] === state.screen, s => { state.screen = s[1]; $("screenDesc").textContent = s[2]; }, (b, s) => { b.id = "screen-" + s[1]; b.textContent = s[0]; });
+  $("screenDesc").textContent = SCREENS[0][2];
+  const syncViews = buttons($("views"), VIEWS, v => v.id === state.view, v => goView(v), (b, v) => { b.id = "view-" + v.id; b.textContent = v.name; });
+  const syncLevels = buttons($("levels"), LEVELS, l => l[1] === state.level, l => { state.level = l[1]; }, (b, l) => { b.id = "level-" + l[0]; b.textContent = l[0]; });
+  const syncLeds = buttons($("leds"), LEDS, l => l[1] === state.led && !state.cycle,
+    l => { state.led = l[1]; state.cycle = false; $("cycle").setAttribute("aria-pressed", "false"); redrawBand(); }, (b, l) => swatch(b, l, "light"));
+  $("cycle").addEventListener("click", () => { state.cycle = !state.cycle; $("cycle").setAttribute("aria-pressed", String(state.cycle)); syncLeds(); });
+  $("spin").addEventListener("click", () => { state.spin = !state.spin; $("spin").setAttribute("aria-pressed", String(state.spin)); });
+  $("opencover").addEventListener("click", () => { state.open = !state.open; $("opencover").setAttribute("aria-pressed", String(state.open)); });
+  buttons($("finishes"), FINISHES, f => f[1] === state.finish, f => { state.finish = f[1]; paintCasing(); }, (b, f) => { b.id = "finish-" + f[1]; b.textContent = f[0]; });
+  buttons($("casings"), CASINGS, c => c[1] === state.casing, c => { state.casing = c[1]; state.casingGlow = c[2]; $("casingDesc").textContent = c[3]; paintCasing(); }, (b, c) => swatch(b, c, "casing"));
+  $("casingDesc").textContent = CASINGS[0][3];
+  buttons($("woods"), WOODS, w => w === state.wood, w => { state.wood = w; topTex.redraw(); woodTex.redraw(); makerTex.redraw(); }, (b, w) => { b.id = "wood-" + w[0]; b.textContent = w[0]; });
+  showLayout();
+
+  // ---------- One set of actions for the app, the remote and (in the real speaker) the voice ----------
+  // Every button sends the same command, so the remote and the app always agree with each other.
+  const LANGS = ["English", "Urdu", "Arabic only"];
+  Object.assign(state, { standby: false, paused: false, volume: 6, repeat: false, lang: 0, adhanWake: true, listening: false });
+  let toastTimer = null, talkFrom = null;
+  function toast(text) {
+    const el = $("toast"); el.textContent = text; el.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 1600);
+  }
+  function wake() { if (state.standby) ACT.standby(); }
+  const ACT = {
+    standby() {
+      state.standby = !state.standby;
+      if (state.standby) { state.tour = false; $("tour").setAttribute("aria-pressed", "false"); }
+      toast(state.standby ? "Standby · goodnight" : "Assalamu alaikum · awake");
+      showNow(); redrawBand();
+    },
+    play() { wake(); state.paused = !state.paused; toast(state.paused ? "Paused" : "Playing"); },
+    // Previous and next ayah while reciting; in other modes they have nothing to skip.
+    step(d) {
+      wake();
+      if (state.mode !== "recite") { toast("Next and previous work while reciting"); return; }
+      const n = AYAHS.length, ai = (WORDS[wordIdx].ai + d + n) % n;
+      wordIdx = firstWordOf(ai); wordClock = 0; redrawBand(); toast(`Ayah ${ai + 1}`);
+    },
+    volume(d) { wake(); state.volume = Math.max(0, Math.min(10, state.volume + d)); $("vol").value = state.volume; toast(state.volume ? `Volume ${state.volume}` : "Muted"); },
+    repeat() { wake(); state.repeat = !state.repeat; toast(state.repeat ? "Repeat this ayah: on (for hifz)" : "Repeat: off"); },
+    mode() {
+      wake();
+      const list = MODES.filter(m => m.id !== "listen"), i = list.findIndex(m => m.id === state.mode);
+      const m = list[(i + 1) % list.length]; endListen(false); setMode(m.id); syncModes(); showChat(null); askFor(m.id); toast(m.name);
+    },
+    lang() { wake(); state.lang = (state.lang + 1) % LANGS.length; toast(`Translation: ${LANGS[state.lang]}`); },
+    light() {
+      wake();
+      const i = LEVELS.findIndex(l => l[1] === state.level), l = LEVELS[(i + 1) % LEVELS.length];
+      state.level = l[1]; syncLevels(); toast(`Light: ${l[0]}`);
+    },
+    // Listen: the phone (or the remote) is the microphone. One tap; it stops by itself when you stop talking.
+    // While it listens the speaker turns itself down and its own microphone is off, and what you say is understood
+    // only within the topic on now. Stop, louder, softer, standby and "go to <topic>" always work.
+    listen() {
+      wake();
+      if (state.listening) { endListen(false); return; }
+      state.listening = true;
+      const topic = MODES.find(m => m.id === state.mode).name;
+      toast(`Listening about ${topic} · speaker turned down`);
+      showNow(); showChat(null);
+      clearTimeout(listenTimer); listenTimer = setTimeout(() => endListen(true), 3200);
+    },
+    turn() { wake(); state.spin = false; $("spin").setAttribute("aria-pressed", "false"); goView(VIEWS[0]); syncViews(); toast("Turning to face you"); },
+  };
+  // What someone might say about each topic, and the speaker's answer: samples for the study, kept to that topic.
+  const SAMPLE_TALK = {
+    recite: ["Repeat this ayah three times", "Repeating this ayah three times, then I will go on."],
+    bayan: ["Go back one minute", "Going back one minute in the bayan."],
+    dhikr: ["Count Astaghfirullah instead", "Now counting Astaghfirullah, 100 times."],
+    timer: ["Add five minutes", "Five more minutes added to your reading time."],
+    prayer: ["When is Maghrib?", "Maghrib is at 5:28 pm today (example)."],
+    places: ["Tell me about Masjid an-Nabawi", "Here is Masjid an-Nabawi in Madinah."],
+    qaida: ["Say Ba again", "Ba. Now you say it: Ba."],
+    stories: ["Go back to the start of this part", "Going back to the start of part 2."],
+    respect: ["Which ayah is this?", "Al-Fatiha, ayah 2."],
+    night: ["Sleep in ten minutes", "I will go to sleep in ten minutes."],
+  };
+  // When a topic is picked the speaker asks what you want, and the app shows quick answers. Recite asks two things.
+  const ASK = {
+    recite: [["Which surah, or which subject?", ["Al-Fatiha", "Yasin", "Al-Mulk", "Al-Kahf", "Ayahs about patience"]],
+             ["Translation in which language?", ["English", "Urdu", "Arabic only"]]],
+    bayan: [["Which scholar or subject?", ["Patience", "Prayer", "Parents", "Latest from my list"]]],
+    dhikr: [["Which dhikr?", ["After-prayer tasbih (33 × 3)", "Astaghfirullah × 100", "Salawat × 100"]]],
+    timer: [["How long will you read?", ["10 minutes", "15 minutes", "30 minutes"]]],
+    prayer: [["For which city?", ["Karachi", "Lahore", "Use my location"]]],
+    places: [["Which place first?", ["Masjid al-Haram", "Masjid an-Nabawi", "Al-Aqsa"]]],
+    qaida: [["Which lesson?", ["Lesson 1: letters", "Lesson 2: joined letters", "Lesson 3: harakat"]]],
+    stories: [["Which prophet's story?", ["Adam", "Nuh", "Ibrahim", "Yusuf", "Yunus"]]],
+    night: [["Sleep after?", ["15 minutes", "30 minutes", "45 minutes"]]],
+  };
+  const chosen = {};   // the answers given for each topic, shown under the player's title
+  let listenTimer = null;
+  function endListen(heard) {
+    clearTimeout(listenTimer);
+    if (!state.listening) return;
+    state.listening = false; showNow();
+    if (heard) { const s = SAMPLE_TALK[state.mode]; if (s) { showChat(s); toast(s[1]); } }
+    syncPlayer();
+  }
+  function showChat(pair) {
+    const el = $("plChat");
+    if (!pair) { el.hidden = !state.listening; el.innerHTML = state.listening ? `<span class="me">Listening… speak to your phone</span>` : ""; return; }
+    el.hidden = false; el.innerHTML = `<span class="me">“${pair[0]}”</span><span class="it">${pair[1]}</span>`;
+  }
+  // Ask the topic's questions one after another; each answer is kept and the next question appears.
+  function askFor(topic, step = 0) {
+    const q = (ASK[topic] || [])[step];
+    $("ask").hidden = !q;
+    if (!q) return;
+    $("askQ").textContent = q[0];
+    const chips = $("askChips"); chips.innerHTML = "";
+    q[1].forEach(c => {
+      const b = document.createElement("button"); b.textContent = c;
+      b.addEventListener("click", () => {
+        chosen[topic] = (step ? (chosen[topic] || "") + " · " : "") + c;
+        toast(c); syncPlayer(); askFor(topic, step + 1);
+      });
+      chips.appendChild(b);
+    });
+  }
+  // The remote: 12 buttons, row by row.
+  const REMOTE = [
+    ["power", "Standby", "r-power", () => ACT.standby()],
+    ["prev", "Previous ayah", "", () => ACT.step(-1)], ["play", "Play or pause", "r-play", () => ACT.play()], ["next", "Next ayah", "", () => ACT.step(1)],
+    ["minus", "Volume down", "", () => ACT.volume(-1)], ["repeat", "Repeat ayah", "", () => ACT.repeat()], ["plus", "Volume up", "", () => ACT.volume(1)],
+    ["MODE", "Mode", "r-word", () => ACT.mode()], ["LANG", "Translation language", "r-word", () => ACT.lang()], ["LIGHT", "Light", "r-word", () => ACT.light()],
+    ["mic", "Talk about this topic", "r-talk", () => ACT.listen()], ["turn", "Turn to face me", "r-turn", () => ACT.turn()],
+  ];
+  REMOTE.forEach(([icon, name, cls, fn]) => {
+    const b = document.createElement("button");
+    b.className = cls; b.id = "remote-" + icon.toLowerCase(); b.title = name; b.setAttribute("aria-label", name);
+    b.innerHTML = icon === icon.toUpperCase() ? icon : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[icon]}</svg>`;
+    const blink = () => { $("rled").classList.add("on"); setTimeout(() => $("rled").classList.remove("on"), 140); };
+    b.addEventListener("click", () => { blink(); fn(); syncPlayer(); });
+    $("remote").appendChild(b);
+  });
+  // The app's player: the same actions as the remote.
+  $("standby").innerHTML = svg(ICON.power);
+  $("standby").addEventListener("click", () => { ACT.standby(); syncPlayer(); });
+  [["repeat", "Repeat ayah", () => ACT.repeat()], ["prev", "Previous ayah", () => ACT.step(-1)], ["play", "Play or pause", () => ACT.play()],
+   ["next", "Next ayah", () => ACT.step(1)], ["mic", "Talk about this topic", () => ACT.listen()]].forEach(([icon, name, fn]) => {
+    const b = document.createElement("button");
+    b.id = "pl-" + icon; b.setAttribute("aria-label", name); b.title = name; b.className = icon === "play" ? "big" : icon === "mic" ? "mic" : "";
+    b.innerHTML = svg(ICON[icon]);
+    b.addEventListener("click", () => { fn(); syncPlayer(); });
+    $("plCtrl").appendChild(b);
+  });
+  $("volLo").innerHTML = svg(ICON.volLo); $("volHi").innerHTML = svg(ICON.volHi);
+  $("vol").value = state.volume;
+  $("vol").addEventListener("input", e => { state.volume = +e.target.value; toast(state.volume ? `Volume ${state.volume}` : "Muted"); });
+  $("adhanWake").addEventListener("click", () => { state.adhanWake = !state.adhanWake; $("adhanWake").setAttribute("aria-pressed", String(state.adhanWake)); });
+  const PLAYER_AR = { recite: "سورة الفاتحة", respect: "سورة الفاتحة", night: "سورة الملك", dhikr: "سُبْحَانَ اللَّهِ", places: "المسجد الحرام",
+    qaida: "القاعدة النورانية", prayer: "الصلاة", bayan: "بيان", stories: "قصص الأنبياء", timer: "تلاوة", listen: "أسمع" };
+  // What the app's player shows: the speaker's state, refreshed a few times a second.
+  function syncPlayer() {
+    const sb = state.standby, m = state.mode, cur = WORDS[wordIdx].ai;
+    $("player").classList.toggle("asleep", sb);
+    $("standby").setAttribute("aria-pressed", String(sb)); $("standby").setAttribute("aria-label", sb ? "Wake the speaker" : "Standby");
+    $("where").textContent = sb ? "Living room speaker · standby" : "Living room speaker · connected";
+    $("where").classList.toggle("asleep", sb);
+    $("plAr").textContent = sb ? "كتاب" : PLAYER_AR[m] || "كتاب";
+    $("plTitle").textContent = sb ? "Sleeping" : m === "recite" ? `Al-Fatiha · Ayah ${cur + 1} of 7` : MODES.find(x => x.id === m).name;
+    $("plSub").textContent = sb ? (state.adhanWake ? "Press the power button to wake · wakes itself for the adhan" : "Press the power button to wake")
+      : state.listening ? `Listening about ${MODES.find(x => x.id === m).name} · speaker turned down, its mic off`
+      : chosen[m] ? `${state.paused ? "Paused · " : ""}${chosen[m]}`
+      : m === "recite" ? `${state.paused ? "Paused" : "Reciting"}${state.repeat ? " · repeating this ayah" : ""} · translation ${LANGS[state.lang]}`
+      : state.paused ? "Paused" : MODES.find(x => x.id === m).desc.split(".")[0];
+    $("player").classList.toggle("hearing", !!state.listening);
+    $("plBar").style.width = m === "recite" ? `${(wordIdx + 1) / WORDS.length * 100}%` : "0%";
+    $("pl-play").innerHTML = svg(state.paused ? ICON.play : ICON.pause);
+    $("pl-play").setAttribute("aria-label", state.paused ? "Play" : "Pause");
+    $("pl-repeat").setAttribute("aria-pressed", String(state.repeat));
+    $("pl-mic").setAttribute("aria-pressed", String(!!state.listening));
+    $("remote-repeat").classList.toggle("r-on", state.repeat);
+    $("remote-mic").classList.toggle("r-on", !!state.listening);
+  }
+
+  // ---------- Three.js scene ----------
+  const canvas = $("view");
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  const maxAniso = renderer.capabilities.getMaxAnisotropy();
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
+  scene.add(new THREE.HemisphereLight(0xe2ebff, 0x2a302c, 0.6));
+  const key = new THREE.DirectionalLight(0xfff4e6, 1.5); key.position.set(2.4, 3.2, 3); scene.add(key);
+  const rim = new THREE.DirectionalLight(0x9fc0ff, 0.9); rim.position.set(-3, 2, -2.5); scene.add(rim);
+  const under = new THREE.DirectionalLight(0xffffff, 0.7); under.position.set(0.6, -3, 1.2); scene.add(under);
+
+  const speaker = new THREE.Group(); scene.add(speaker);   // turns on the base
+  const W = 1.0, H = 1.2, D = 1.0, R = 0.22;
+  const taper = y => 1 - state.look.taper * (y + H / 2) / H;   // the lantern narrows towards the top
+
+  // A box with every edge rounded: push each vertex of a finely divided box onto a rounded shell.
+  function roundedBox(w, h, d, r, seg, tapered) {
+    const g = new THREE.BoxGeometry(w, h, d, seg, seg, seg);
+    const p = g.attributes.position, nrm = g.attributes.normal;
+    const ix = w / 2 - r, iy = h / 2 - r, iz = d / 2 - r, v = new THREE.Vector3(), c = new THREE.Vector3();
+    for (let i = 0; i < p.count; i++) {
+      v.fromBufferAttribute(p, i);
+      c.set(Math.max(-ix, Math.min(ix, v.x)), Math.max(-iy, Math.min(iy, v.y)), Math.max(-iz, Math.min(iz, v.z)));
+      const n = v.clone().sub(c);
+      if (n.lengthSq() < 1e-9) n.set(0, 1, 0);
+      n.normalize();
+      const y = c.y + n.y * r, s = tapered ? taper(y) : 1;
+      p.setXYZ(i, (c.x + n.x * r) * s, y, (c.z + n.z * r) * s);
+      nrm.setXYZ(i, n.x, n.y + (tapered ? state.look.taper * 0.4 * Math.hypot(n.x, n.z) : 0), n.z);
+    }
+    if (tapered) for (let i = 0; i < nrm.count; i++) { v.fromBufferAttribute(nrm, i).normalize(); nrm.setXYZ(i, v.x, v.y, v.z); }
+    return g;
+  }
+
+  // The speaker's rounded-square outline; u runs along it so text wraps all four sides.
+  function perimeter(off) {
+    const a = W / 2 + off, b = D / 2 + off, rr = R + off, cx = a - rr, cz = b - rr, pts = [];
+    [[cx, cz], [-cx, cz], [-cx, -cz], [cx, -cz]].forEach(([x, z], k) => {
+      for (let i = 0; i <= 16; i++) {
+        const t = (k + i / 16) * Math.PI / 2;
+        pts.push({ x: x + rr * Math.cos(t), z: z + rr * Math.sin(t), nx: Math.cos(t), nz: Math.sin(t) });
+      }
+    });
+    pts.push({ ...pts[0] });
+    let s = 0; pts[0].s = 0;
+    for (let i = 1; i < pts.length; i++) { s += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z); pts[i].s = s; }
+    // The text's seam sits in the middle of the front-right corner, so no flat side is cut in two.
+    pts.forEach(p => p.u = 1 - p.s / s + rr * Math.PI / 4 / s);
+    return { pts, L: s, q: rr * Math.PI / 2, side: 2 * cx };
+  }
+  function strip(off, y0, y1, tapered = true) {
+    const { pts } = perimeter(off), pos = [], nor = [], uv = [], idx = [];
+    const s0 = tapered ? taper(y0) : 1, s1 = tapered ? taper(y1) : 1;
+    pts.forEach(p => { pos.push(p.x * s0, y0, p.z * s0, p.x * s1, y1, p.z * s1); nor.push(p.nx, 0, p.nz, p.nx, 0, p.nz); uv.push(p.u, 0, p.u, 1); });
+    for (let i = 0; i < pts.length - 1; i++) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3));
+    g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+    g.setIndex(idx);
+    return g;
+  }
+  function canvasTex(w, h, draw, repeat) {
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = maxAniso;
+    if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat, repeat); }
+    t.redraw = () => { draw(c.getContext("2d"), w, h); t.needsUpdate = true; };
+    t.redraw();
+    return t;
+  }
+  function roundRect(g, x, y, w, h, r) {
+    g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+  }
+  // An eight-pointed star made of two squares, as in the Rub el Hizb.
+  function star8(g, x, y, r, rot = 0) {
+    g.beginPath();
+    for (let k = 0; k < 16; k++) {
+      const a = rot + k * Math.PI / 8, rad = k % 2 ? r * 0.7654 : r;
+      const px = x + rad * Math.cos(a), py = y + rad * Math.sin(a);
+      k ? g.lineTo(px, py) : g.moveTo(px, py);
+    }
+    g.closePath();
+  }
+
+  // ---------- Casing ----------
+  // Fabric weave or frosted plastic. Patterns are light from behind (glowTex), never printed on it.
+  const casingTex = canvasTex(1024, 1024, (g, w, h) => {
+    const base = new THREE.Color(state.casing), hex = c => "#" + c.getHexString();
+    g.fillStyle = hex(base); g.fillRect(0, 0, w, h);
+    if (state.finish !== "plastic") {
+      const f = FAB[state.finish], c = f.c, half = Math.ceil(c / 2);
+      for (let y = 0; y < h; y += c) for (let x = 0; x < w; x += c) {
+        const k = ((x + y) / c) % 2 ? 0.07 : -0.06, j = (Math.abs(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1) * f.slub;
+        g.fillStyle = hex(base.clone().offsetHSL(0, 0, k + j - f.slub / 2)); g.fillRect(x, y, c, half);
+        g.fillStyle = hex(base.clone().offsetHSL(0, 0, -k * 0.6)); g.fillRect(x, y + half, c, c - half);
+      }
+      if (state.finish === "linen") {
+        // Linen's uneven threads: short thicker strands here and there
+        for (let i = 0; i < 700; i++) {
+          g.fillStyle = `rgba(${Math.random() < 0.5 ? "0,0,0" : "255,255,255"},0.08)`;
+          g.fillRect(Math.random() * w, Math.floor(Math.random() * h / c) * c, 20 + Math.random() * 60, half);
+        }
+      }
+    } else {
+      for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${Math.random() < 0.5 ? "0,0,0" : "255,255,255"},0.035)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+    }
+  });
+  // The fabric's tiny gaps that let light through, drawn once per finish and reused.
+  const holes = document.createElement("canvas"); holes.width = holes.height = 1024; let holesFor = null;
+  // The pattern is drawn small and scaled up: fast enough to move, and the scaling softens it like light through cloth.
+  const pat = document.createElement("canvas"); pat.width = pat.height = 256; const pg = pat.getContext("2d");
+  let patPhase = 0;
+  // The colour of each part of a pattern. "Light colour" draws white and the light inside gives the colour;
+  // the others are colourful LEDs, each its own colour, which slowly change while the pattern moves.
+  function paletteFn() {
+    const p = state.palette, shift = patPhase;
+    if (p === "mono" || state.mode === "night") return () => "#ffffff";
+    if (p === "rainbow") return i => `hsl(${(i * 47 + shift * 24) % 360}, 92%, 62%)`;
+    const set = PALETTE_SETS[p], step = Math.floor(shift / 2);
+    return i => set[((i + step) % set.length + set.length) % set.length];
+  }
+  const glowTex = canvasTex(1024, 1024, (g, w, h) => {
+    if (holesFor !== state.finish) {
+      holesFor = state.finish;
+      const hg = holes.getContext("2d");
+      if (state.finish !== "plastic") {
+        const f = FAB[state.finish], c = f.c;
+        hg.fillStyle = f.base; hg.fillRect(0, 0, w, h); hg.fillStyle = "#ffffff";
+        for (let y = c / 2; y < h; y += c) for (let x = ((y / c) | 0) % 2 ? 0 : c / 2; x < w; x += c) hg.fillRect(x, y, f.hole, f.hole);
+      } else {
+        const gr = hg.createLinearGradient(0, 0, 0, h);
+        gr.addColorStop(0, "#9a9a9a"); gr.addColorStop(0.5, "#ffffff"); gr.addColorStop(1, "#8a8a8a");
+        hg.fillStyle = gr; hg.fillRect(0, 0, w, h);
+      }
+    }
+    g.globalCompositeOperation = "source-over"; g.drawImage(holes, 0, 0);
+    if (state.pattern !== "none") {
+      // A pattern made of light: small LEDs behind the casing, softened by it. Nothing is printed.
+      g.globalCompositeOperation = "multiply"; g.fillStyle = state.palette === "mono" ? "#3a3a3a" : "#1a1a1a"; g.fillRect(0, 0, w, h);
+      g.globalCompositeOperation = "source-over";
+      pg.clearRect(0, 0, 256, 256);
+      pg.save(); pg.scale(0.25, 0.25); pg.filter = "blur(2px)";
+      drawPattern(pg, 1024, 1024, state.pattern, patPhase, paletteFn());
+      pg.restore(); pg.filter = "none";
+      g.drawImage(pat, 0, 0, w, h);
+    }
+  });
+  // A pointed petal from (x, y) pointing along angle a.
+  function petal(g, x, y, a, len, wid) {
+    g.save(); g.translate(x, y); g.rotate(a);
+    g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(wid, len * 0.5, 0, len); g.quadraticCurveTo(-wid, len * 0.5, 0, 0);
+    g.fill(); g.restore();
+  }
+  // A flower: an outer ring of petals, an inner ring between them, and a bright heart.
+  function rosette(g, x, y, r, n, rot, col, k) {
+    g.fillStyle = col(k);
+    for (let p = 0; p < n; p++) petal(g, x, y, rot + p * Math.PI * 2 / n, r, r * 0.34);
+    g.fillStyle = col(k + 1);
+    for (let p = 0; p < n; p++) petal(g, x, y, -rot * 1.5 + (p + 0.5) * Math.PI * 2 / n, r * 0.6, r * 0.2);
+    g.fillStyle = col(k + 2); g.beginPath(); g.arc(x, y, r * 0.16, 0, Math.PI * 2); g.fill();
+  }
+  // Every pattern tiles: what leaves one edge comes back in at the other, so the casing has no seams.
+  // ph is the time, used when the pattern moves; col(i) is the colour of part i.
+  function drawPattern(g, w, h, kind, ph, col) {
+    g.lineCap = "round"; g.lineJoin = "round";
+    let k = 0;
+    if (kind === "stars") {
+      const c = w / 4;
+      for (let y = c / 2; y < h; y += c) for (let x = c / 2; x < w; x += c) { g.fillStyle = col(k++); star8(g, x, y, c * 0.3, Math.PI / 8 + ph * 0.15); g.fill(); }
+    } else if (kind === "girih") {
+      const c = w / 3; g.lineWidth = 12;
+      for (let y = c / 2; y < h + c; y += c) for (let x = c / 2; x < w + c; x += c) {
+        g.strokeStyle = col(k++);
+        star8(g, x, y, c * 0.38, Math.PI / 8); g.stroke();
+        g.beginPath(); g.moveTo(x + c * 0.38, y); g.lineTo(x + c * 0.62, y); g.moveTo(x, y + c * 0.38); g.lineTo(x, y + c * 0.62); g.stroke();
+      }
+    } else if (kind === "arabesque") {
+      g.lineWidth = 11;
+      for (let row = 0; row < 4; row++) {
+        const y0 = h * (row + 0.5) / 4, s = ph * 0.5 * (row % 2 ? 1 : -1);
+        g.strokeStyle = col(row); g.beginPath();
+        for (let x = 0; x <= w; x += 8) { const y = y0 + Math.sin(x / w * Math.PI * 4 + row + s) * h * 0.06; x ? g.lineTo(x, y) : g.moveTo(x, y); }
+        g.stroke();
+        for (let q = 0; q < 8; q++) {
+          const x = (q + 0.5) * w / 8, y = y0 + Math.sin((q + 0.5) / 8 * Math.PI * 4 + row + s) * h * 0.06, d = q % 2 ? 1 : -1;
+          g.fillStyle = col(row + q + 1); g.beginPath(); g.ellipse(x, y + d * h * 0.045, w * 0.022, h * 0.04, d * 0.6, 0, Math.PI * 2); g.fill();
+        }
+      }
+    } else if (kind === "dots") {
+      const c = w / 7;
+      for (let y = c / 2; y < h; y += c) for (let x = c / 2; x < w; x += c) {
+        g.fillStyle = col(k); g.beginPath(); g.arc(x, y, c * 0.13 * (0.75 + 0.25 * Math.sin(ph * 2 + k * 1.7)), 0, Math.PI * 2); g.fill(); k++;
+      }
+    } else if (kind === "flowers") {
+      // Flowers in a grid, turning gently, joined by curling vines with small leaves.
+      const c = w / 3;
+      g.lineWidth = 7;
+      for (let j = 0; j <= 3; j++) for (let i = 0; i <= 3; i++) {
+        const x = i * c, y = j * c, sway = Math.sin(ph) * 0.2;
+        g.strokeStyle = col(20 + i + j);
+        g.beginPath(); g.moveTo(x - c * 0.22, y); g.bezierCurveTo(x - c * 0.05, y - c * 0.18, x + c * 0.05, y + c * 0.18, x + c * 0.22, y); g.stroke();
+        g.fillStyle = col(21 + i + j);
+        petal(g, x, y, Math.PI * 0.75 + sway, c * 0.12, c * 0.05); petal(g, x, y, -Math.PI * 0.25 + sway, c * 0.12, c * 0.05);
+      }
+      for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) {
+        const dir = (i + j) % 2 ? 1 : -1;
+        rosette(g, (i + 0.5) * c, (j + 0.5) * c, c * 0.36, 8, ph * 0.25 * dir, col, k); k += 3;
+      }
+    } else if (kind === "mandala") {
+      // One big mandala on each side, its rings turning in opposite directions, with quarter-flowers in the corners.
+      const cx = w / 2, cy = h / 2;
+      const rings = [[8, 0, 0.13, 0.055], [12, 0.13, 0.12, 0.045], [16, 0.25, 0.11, 0.038], [24, 0.36, 0.09, 0.028]];
+      rings.forEach(([n, d, len, wid], ri) => {
+        const rot = ph * 0.12 * (ri % 2 ? -1 : 1) * (1 + ri * 0.3);
+        g.fillStyle = col(ri);
+        for (let p = 0; p < n; p++) {
+          const a = rot + p * Math.PI * 2 / n;
+          petal(g, cx - Math.sin(a) * d * w, cy + Math.cos(a) * d * w, a, len * w, wid * w);
+        }
+      });
+      g.fillStyle = col(5); g.beginPath(); g.arc(cx, cy, w * 0.035, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = col(6); g.lineWidth = 6; g.beginPath(); g.arc(cx, cy, w * 0.475, 0, Math.PI * 2); g.stroke();
+      [[0, 0], [w, 0], [0, h], [w, h]].forEach(([x, y]) => rosette(g, x, y, w * 0.13, 8, -ph * 0.2, col, 7));
+    } else if (kind === "ribbons") {
+      // Ribbons of light flowing across, each its own colour, weaving over and under each other.
+      const n = 6;
+      for (let j = 0; j < n; j++) {
+        const y0 = h * (j + 0.5) / n;
+        g.strokeStyle = col(j); g.lineWidth = 16;
+        g.beginPath();
+        for (let x = 0; x <= w; x += 8) {
+          const y = y0 + Math.sin(x / w * Math.PI * 4 + ph * 0.7 + j * 0.9) * h * 0.075 + Math.sin(x / w * Math.PI * 2 - ph * 0.4 + j) * h * 0.03;
+          x ? g.lineTo(x, y) : g.moveTo(x, y);
+        }
+        g.stroke();
+      }
+    }
+  }
+  const casingMat = new THREE.MeshStandardMaterial({ map: casingTex, roughness: 0.96, metalness: 0, emissive: new THREE.Color(state.led), emissiveMap: glowTex, emissiveIntensity: 0.3 });
+  function paintCasing() {
+    casingTex.redraw(); glowTex.redraw();
+    if (typeof bandTexMap !== "undefined") { bandTexMap.needsUpdate = true; bandGlowMap.needsUpdate = true; }
+    casingMats.forEach(m => m.roughness = state.finish === "plastic" ? 0.32 : state.finish === "canvas" ? 1 : 0.94);
+  }
+  // The casing in three parts: a top section and a bottom section that come off, and the cover sleeve between them.
+  // Each part is the same shell, cut by two flat planes that move with it.
+  renderer.localClippingEnabled = true;
+  const topSec = new THREE.Group(), sleeve = new THREE.Group(), bottomSec = new THREE.Group();
+  speaker.add(topSec, sleeve, bottomSec);
+  const planes = {
+    top: new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), midLo: new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
+    midHi: new THREE.Plane(new THREE.Vector3(0, -1, 0), 0), bottom: new THREE.Plane(new THREE.Vector3(0, -1, 0), 0),
+  };
+  const casingMats = [[planes.top], [planes.midLo, planes.midHi], [planes.bottom]].map(cp => {
+    const m = casingMat.clone(); m.clippingPlanes = cp; m.side = THREE.DoubleSide; return m;
+  });
+  const bodies = casingMats.map((m, i) => { const b = new THREE.Mesh(roundedBox(W, H, D, R, 40, true), m); [topSec, sleeve, bottomSec][i].add(b); return b; });
+  // Inside: the frame that holds the screen, seen only when the cover is off.
+  const chassis = new THREE.Mesh(roundedBox(W - 0.09, H - 0.06, D - 0.09, R - 0.04, 24, true), new THREE.MeshStandardMaterial({ color: 0x2a2d2c, roughness: 0.6, metalness: 0.2 }));
+  bottomSec.add(chassis);
+  let openE = 0, tourT = 0;
+  // The raised screen band wears the same cover; its own copies of the textures keep the weave the right size.
+  const bandTexMap = casingTex.clone(), bandGlowMap = glowTex.clone();
+  [bandTexMap, bandGlowMap].forEach(tx => { tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.needsUpdate = true; });
+  const bandCasingMat = casingMats[1].clone();
+  bandCasingMat.map = bandTexMap; bandCasingMat.emissiveMap = bandGlowMap; bandCasingMat.clippingPlanes = [planes.midLo, planes.midHi];
+  casingMats.push(bandCasingMat);
+  // A flat ring between two outlines: the top and bottom edges of the raised screen.
+  function lip(y, off0, off1, up) {
+    const a = perimeter(off0).pts, b = perimeter(off1).pts, k = taper(y), pos = [], nor = [], uv = [], idx = [];
+    a.forEach((pt, i) => { pos.push(pt.x * k, y, pt.z * k, b[i].x * k, y, b[i].z * k); nor.push(0, up, 0, 0, up, 0); uv.push(pt.u, 0, pt.u, 0.02); });
+    for (let i = 0; i < a.length - 1; i++) { const j = i * 2; idx.push(j, j + 2, j + 1, j + 1, j + 2, j + 3); }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3));
+    g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+    g.setIndex(idx);
+    return g;
+  }
+
+  // ---------- Wood ----------
+  const woodGrain = (g, w, h) => {
+    const [, light, dark] = state.wood;
+    g.fillStyle = light; g.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 2) { g.fillStyle = dark; g.globalAlpha = Math.max(0, 0.08 + 0.08 * Math.sin(y * 0.09 + Math.sin(y * 0.013) * 6)); g.fillRect(0, y, w, 1); }
+    g.globalAlpha = 1;
+  };
+  const woodTex = canvasTex(512, 512, woodGrain);
+  // The wooden top: Rub el Hizb star etched around the light ring, touch icons around it.
+  const topTex = canvasTex(512, 512, (g, w, h) => {
+    woodGrain(g, w, h);
+    const dark = state.wood[2], cx = w / 2, cy = h / 2;
+    g.globalAlpha = 0.75; g.strokeStyle = dark; g.lineWidth = 5;
+    star8(g, cx, cy, 200, Math.PI / 8); g.stroke();
+    g.fillStyle = dark; g.globalAlpha = 0.85;
+    g.beginPath(); g.moveTo(cx - 14, h - 52); g.lineTo(cx - 14, h - 20); g.lineTo(cx + 16, h - 36); g.closePath(); g.fill();
+    const tri = (x, dir) => { g.beginPath(); g.moveTo(x, cy - 14); g.lineTo(x, cy + 14); g.lineTo(x + dir * 22, cy); g.closePath(); g.fill(); g.fillRect(x + dir * 22 - (dir > 0 ? 0 : 5), cy - 14, 5, 28); };
+    tri(w - 50, 1); tri(50, -1);
+    g.fillRect(cx - 50, 30, 30, 6); g.fillRect(cx + 20, 30, 30, 6); g.fillRect(cx + 32, 18, 6, 30);
+    g.globalAlpha = 1;
+  });
+  topTex.repeat.set(1 / 0.62, 1 / 0.62); topTex.offset.set(0.5, 0.5);
+  const plateShape = new THREE.Shape(), ps = 0.31, pr = 0.12;
+  plateShape.moveTo(-ps + pr, -ps); plateShape.lineTo(ps - pr, -ps); plateShape.quadraticCurveTo(ps, -ps, ps, -ps + pr);
+  plateShape.lineTo(ps, ps - pr); plateShape.quadraticCurveTo(ps, ps, ps - pr, ps); plateShape.lineTo(-ps + pr, ps);
+  plateShape.quadraticCurveTo(-ps, ps, -ps, ps - pr); plateShape.lineTo(-ps, -ps + pr); plateShape.quadraticCurveTo(-ps, -ps, -ps + pr, -ps);
+  const plateGeo = new THREE.ExtrudeGeometry(plateShape, { depth: 0.012, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 3, curveSegments: 16 });
+  plateGeo.rotateX(-Math.PI / 2);
+  const plate = new THREE.Mesh(plateGeo, new THREE.MeshStandardMaterial({ map: topTex, roughness: 0.55 }));
+  plate.position.y = H / 2 - 0.004; topSec.add(plate);
+  const ringMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(state.led), toneMapped: false });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.105, 0.007, 12, 96), ringMat);
+  ring.rotation.x = Math.PI / 2; ring.position.y = H / 2 + 0.022; topSec.add(ring);
+  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.014, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }));
+  dot.position.y = H / 2 + 0.024; topSec.add(dot);
+  const mics = [[0.2, 0.2], [-0.2, 0.2], [0.2, -0.2], [-0.2, -0.2]].map(([x, z]) => {
+    const m = new THREE.Mesh(new THREE.CircleGeometry(0.008, 16), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+    m.rotation.x = -Math.PI / 2; m.userData.xz = [x, z]; topSec.add(m); return m;
+  });
+  // ---------- Add-ons on top: a dome like Masjid an-Nabawi's, minarets, or both ----------
+  const addon = new THREE.Group(); topSec.add(addon);
+  const stoneMat = new THREE.MeshStandardMaterial({ color: 0xece4d2, roughness: 0.6 });
+  const domeMat = new THREE.MeshStandardMaterial({ color: 0x2f8a57, roughness: 0.42, metalness: 0.05 });
+  const goldMat = new THREE.MeshStandardMaterial({ color: 0xd4a63a, metalness: 0.7, roughness: 0.3, emissive: 0x2a1c06 });
+  const lampMat = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
+  const marbleMat = new THREE.MeshStandardMaterial({ color: 0xf2efe8, roughness: 0.35 });
+  const lanternGlassMat = new THREE.MeshStandardMaterial({ color: 0xffe2b0, roughness: 0.2, transparent: true, opacity: 0.88 });
+  // The Kaaba's cloth: black with a faint weave and the gold band, which glows a little from inside.
+  const kaabaTex = canvasTex(256, 256, (g, w, h) => {
+    g.fillStyle = "#0b0b0b"; g.fillRect(0, 0, w, h);
+    g.strokeStyle = "#161616"; g.lineWidth = 2;
+    for (let i = -h; i < w; i += 10) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + h, h); g.stroke(); }
+    g.fillStyle = "#c9a24a"; g.fillRect(0, h * 0.2, w, h * 0.1);
+    g.strokeStyle = "#7d5f22"; g.lineWidth = 3;
+    for (let x = 6; x < w; x += 22) { g.beginPath(); g.arc(x, h * 0.25, 7, 0.3, Math.PI * 1.7); g.stroke(); }
+  });
+  const kaabaGlow = canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#000"; g.fillRect(0, 0, w, h); g.fillStyle = "#fff"; g.fillRect(0, h * 0.2, w, h * 0.1); });
+  const kaabaMat = new THREE.MeshStandardMaterial({ map: kaabaTex, roughness: 0.85, emissive: 0xffc96a, emissiveMap: kaabaGlow, emissiveIntensity: 0.4 });
+  const blackMat = new THREE.MeshStandardMaterial({ color: 0x0b0b0b, roughness: 0.9 });
+  let tawafDots = [], kaabaG = null;
+  // The dome's outline from its rim to its point, turned around its axis.
+  const DOME_PROFILE = [[0.15, 0], [0.158, 0.03], [0.155, 0.07], [0.14, 0.11], [0.115, 0.15], [0.08, 0.185], [0.04, 0.21], [0.012, 0.225], [0, 0.232]]
+    .map(([x, y]) => new THREE.Vector2(x, y));
+  // A gold rod with two beads and a crescent opening upwards.
+  function finial(y, k) {
+    const g = new THREE.Group();
+    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.003 * k, 0.003 * k, 0.06 * k, 8), goldMat); rod.position.y = 0.03 * k; g.add(rod);
+    [0.012, 0.032].forEach(h => { const b = new THREE.Mesh(new THREE.SphereGeometry(0.008 * k, 12, 8), goldMat); b.position.y = h * k; g.add(b); });
+    const cres = new THREE.Mesh(new THREE.TorusGeometry(0.015 * k, 0.0035 * k, 8, 24, Math.PI * 1.35), goldMat);
+    cres.position.y = 0.078 * k; cres.rotation.z = 2.59; g.add(cres);
+    g.position.y = y;
+    return g;
+  }
+  function minaret(x, z) {
+    const g = new THREE.Group();
+    const part = (geo, mat, y) => { const m = new THREE.Mesh(geo, mat); m.position.y = y; g.add(m); return m; };
+    part(new THREE.CylinderGeometry(0.016, 0.02, 0.2, 16), stoneMat, 0.1);
+    part(new THREE.CylinderGeometry(0.027, 0.022, 0.012, 16), stoneMat, 0.15);
+    part(new THREE.CylinderGeometry(0.0272, 0.0272, 0.004, 16), lampMat, 0.1575);
+    part(new THREE.CylinderGeometry(0.012, 0.014, 0.05, 12), stoneMat, 0.18);
+    part(new THREE.ConeGeometry(0.016, 0.05, 16), domeMat, 0.23);
+    g.add(finial(0.255, 0.55));
+    g.position.set(x, 0, z);
+    return g;
+  }
+  const hasDome = () => ["dome", "both", "gold"].includes(state.addon);
+  function buildAddon() {
+    while (addon.children.length) addon.remove(addon.children[0]);
+    const t = taper(H / 2), kind = state.addon;
+    addon.position.y = H / 2 + 0.012;
+    domeMat.color.set(kind === "gold" ? 0xd4a63a : 0x1d7a46).convertSRGBToLinear();
+    domeMat.metalness = kind === "gold" ? 0.65 : 0.05; domeMat.roughness = kind === "gold" ? 0.3 : 0.42;
+    if (hasDome()) {
+      const domeG = new THREE.Group(); domeG.scale.setScalar(1.25 * t); addon.add(domeG);
+      const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.156, 0.05, 48), stoneMat); drum.position.y = 0.025; domeG.add(drum);
+      for (let k = 0; k < 16; k++) {
+        const a = k / 16 * Math.PI * 2, win = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.024, 0.004), lampMat);
+        win.position.set(Math.sin(a) * 0.1535, 0.025, Math.cos(a) * 0.1535); win.rotation.y = a; domeG.add(win);
+      }
+      const dome = new THREE.Mesh(new THREE.LatheGeometry(DOME_PROFILE, 48), domeMat); dome.position.y = 0.05; domeG.add(dome);
+      domeG.add(finial(0.05 + 0.232, 1));
+    }
+    if (kind === "minarets" || kind === "both") {
+      const d = 0.205 * t;
+      [[d, d], [-d, d], [d, -d], [-d, -d]].forEach(([x, z]) => addon.add(minaret(x, z)));
+    }
+    tawafDots = []; kaabaG = null;
+    if (kind === "kaaba") {
+      const g = new THREE.Group(); g.scale.setScalar(1.35 * t); addon.add(g);
+      // The mataf in white marble, with small lights that go round counter-clockwise, like tawaf.
+      const mataf = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.215, 0.016, 64), marbleMat); mataf.position.y = 0.008; g.add(mataf);
+      for (let k = 0; k < 40; k++) {
+        const a = k / 40 * Math.PI * 2, d = new THREE.Mesh(new THREE.SphereGeometry(0.0055, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }));
+        d.userData.a = a; d.position.set(Math.cos(a) * 0.185, 0.019, -Math.sin(a) * 0.185); g.add(d); tawafDots.push(d);
+      }
+      kaabaG = new THREE.Group(); kaabaG.position.y = 0.016; g.add(kaabaG);
+      const cube = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.2, 0.15), [kaabaMat, kaabaMat, blackMat, blackMat, kaabaMat, kaabaMat]);
+      cube.position.y = 0.1; kaabaG.add(cube);
+      const door = new THREE.Mesh(new THREE.PlaneGeometry(0.034, 0.058), goldMat); door.position.set(0.03, 0.062, 0.0752); kaabaG.add(door);
+    }
+    if (kind === "lantern") {
+      // A fanous: gold base and roof, glass sides lit from inside, a ring to hang it by.
+      const g = new THREE.Group(); g.scale.setScalar(1.15 * t); addon.add(g);
+      const part = (geo, mat, y) => { const m = new THREE.Mesh(geo, mat); m.position.y = y; g.add(m); return m; };
+      part(new THREE.CylinderGeometry(0.07, 0.085, 0.03, 6), goldMat, 0.015);
+      const glassGeo = new THREE.CylinderGeometry(0.075, 0.06, 0.15, 6);
+      part(glassGeo, lanternGlassMat, 0.105);
+      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(glassGeo), new THREE.LineBasicMaterial({ color: 0xc9a055 })); edges.position.y = 0.105; g.add(edges);
+      part(new THREE.ConeGeometry(0.085, 0.07, 6), goldMat, 0.215);
+      part(new THREE.SphereGeometry(0.012, 12, 8), goldMat, 0.256);
+      part(new THREE.TorusGeometry(0.022, 0.004, 8, 24), goldMat, 0.285);
+    }
+    ring.visible = ["none", "minarets"].includes(kind);
+  }
+  buildAddon();
+
+  const brassMat = new THREE.MeshStandardMaterial({ color: 0xc9a055, metalness: 0.75, roughness: 0.32, emissive: 0x2a1c06, side: THREE.DoubleSide });
+
+  // The wooden turning base stays still while the speaker turns on it.
+  const baseGroup = new THREE.Group(); scene.add(baseGroup);
+  const baseY = -H / 2 - 0.045;
+  const base = new THREE.Mesh(roundedBox(1.0, 0.08, 1.0, 0.035, 10, false), new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.55 }));
+  base.position.y = baseY; baseGroup.add(base);
+  // The maker's name, small and embossed in the wood itself on the front of the base (which stays still while the
+  // speaker turns): the letters are the wood's own colour, with a light top edge and a soft shadow under them.
+  const makerTex = canvasTex(1024, 96, (g, w, h) => {
+    const [, light, dark] = state.wood, line = (col, dy, a) => { g.globalAlpha = a; g.fillStyle = col; g.fillText("INKABOTS 2027", w / 2, h / 2 + 4 + dy); };
+    g.clearRect(0, 0, w, h);
+    g.textAlign = "center"; g.textBaseline = "middle";
+    g.font = "600 54px Figtree, sans-serif";
+    if ("letterSpacing" in g) g.letterSpacing = "18px";
+    // A deeper shadow and a brighter top edge make the raised letters easier to see, still in the wood's colour.
+    line("#000000", 5, 0.7); line(dark, 3, 1); line("#ffffff", -3, 0.6); line(light, 0, 1); line("#ffffff", 0, 0.35);
+    g.globalAlpha = 0.55; g.strokeStyle = dark; g.lineWidth = 2.5; g.strokeText("INKABOTS 2027", w / 2, h / 2 + 4);
+    g.globalAlpha = 1;
+  });
+  const maker = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.028),
+    new THREE.MeshStandardMaterial({ map: makerTex, roughness: 0.5, transparent: true, depthWrite: false }));
+  maker.position.set(0, baseY, 0.5012); baseGroup.add(maker);
+  const seamMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(state.led), toneMapped: false, side: THREE.DoubleSide });
+  baseGroup.add(new THREE.Mesh(strip(-0.02, -H / 2 - 0.006, -H / 2 + 0.002, false), seamMat));
+
+  // Underneath: down-facing speaker grille, rubber feet, USB-C, power button, the name.
+  const bottomTex = canvasTex(1024, 1024, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    roundRect(g, 4, 4, w - 8, h - 8, 70); g.fillStyle = "#1c1f1e"; g.fill();
+    const cx = w / 2, cy = h / 2 + 30, R0 = 260;
+    g.strokeStyle = "#3a403d"; g.lineWidth = 10; g.beginPath(); g.arc(cx, cy, R0 + 18, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = "#0b0d0c";
+    for (let y = -R0; y <= R0; y += 22) for (let x = -R0; x <= R0; x += 22) {
+      const ox = x + ((y / 22) % 2 ? 11 : 0);
+      if (ox * ox + y * y < (R0 - 8) * (R0 - 8)) { g.beginPath(); g.arc(cx + ox, cy + y, 6.5, 0, Math.PI * 2); g.fill(); }
+    }
+    [[110, 110], [w - 110, 110], [110, h - 110], [w - 110, h - 110]].forEach(([x, y]) => {
+      const gr = g.createRadialGradient(x - 10, y - 10, 4, x, y, 46); gr.addColorStop(0, "#4a4f4c"); gr.addColorStop(1, "#101211");
+      g.fillStyle = gr; g.beginPath(); g.arc(x, y, 44, 0, Math.PI * 2); g.fill();
+    });
+    g.fillStyle = "#e9e3d5"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.font = "600 64px 'Reem Kufi', sans-serif"; g.fillText("Kiitab", cx - 70, 150);
+    g.font = "700 70px Amiri, serif"; g.fillText("كتاب", cx + 120, 146);
+    g.font = "500 26px Figtree, sans-serif"; g.fillStyle = "#9aa39e";
+    g.fillText("Quran speaker  ·  model K1", cx, 214);
+    roundRect(g, cx - 54, h - 70, 108, 36, 18); g.fillStyle = "#050606"; g.fill();
+    g.font = "500 22px Figtree, sans-serif"; g.fillStyle = "#9aa39e"; g.fillText("USB-C", cx, h - 104);
+    g.strokeStyle = "#9aa39e"; g.lineWidth = 5; g.beginPath(); g.arc(w - 230, h - 90, 26, -Math.PI * 0.32, Math.PI * 1.32); g.stroke();
+    g.beginPath(); g.moveTo(w - 230, h - 124); g.lineTo(w - 230, h - 92); g.stroke();
+    g.fillText("Power", w - 230, h - 140);
+    g.fillText("Speaker", cx, cy + R0 + 52);
+  });
+  const bottom = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.0), new THREE.MeshStandardMaterial({ map: bottomTex, transparent: true, alphaTest: 0.5, roughness: 0.8 }));
+  bottom.rotation.x = Math.PI / 2; bottom.position.y = baseY - 0.0405; baseGroup.add(bottom);
+
+  const radial = (inner, outer) => canvasTex(256, 256, (g, w, h) => {
+    const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+    gr.addColorStop(0, inner); gr.addColorStop(1, outer); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  });
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshBasicMaterial({ map: radial("rgba(0,0,0,0.7)", "rgba(0,0,0,0)"), transparent: true, depthWrite: false }));
+  shadow.rotation.x = -Math.PI / 2; shadow.position.y = baseY - 0.043; scene.add(shadow);
+  const glowMat = new THREE.MeshBasicMaterial({ map: radial("rgba(255,255,255,0.9)", "rgba(255,255,255,0)"), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: new THREE.Color(state.led), toneMapped: false });
+  const floorGlow = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.4), glowMat);
+  floorGlow.rotation.x = -Math.PI / 2; floorGlow.position.y = baseY - 0.041; scene.add(floorGlow);
+
+
+  // ---------- The screen ----------
+  // A dark backing (the screen behind the casing) and the glowing text on top of it.
+  let per, BAND_W = 6144, BAND_H, bandCanvas, bg, bandTex, shadeTex, shadeMesh, textMesh, coreShade, coreText, raised, lipTop, lipBot, brass = [], FACES, FACE_W, Y, S, HC;
+  const shadeMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+  const coreMat = new THREE.MeshBasicMaterial({ color: 0x050706, side: THREE.DoubleSide });
+  const coreTextMat = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, side: THREE.DoubleSide });
+  const textMat = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, side: THREE.DoubleSide });
+  // The canvas the screen is drawn on, w by h pixels, shared by the screen and its copy on the inner frame.
+  function makeBand(w, h) {
+    BAND_W = w; BAND_H = h;
+    bandCanvas = document.createElement("canvas"); bandCanvas.width = w; bandCanvas.height = h;
+    bg = bandCanvas.getContext("2d");
+    if (bandTex) bandTex.dispose();
+    bandTex = new THREE.CanvasTexture(bandCanvas);
+    bandTex.encoding = THREE.sRGBEncoding; bandTex.wrapS = THREE.RepeatWrapping; bandTex.anisotropy = maxAniso;
+    textMat.map = bandTex; textMat.needsUpdate = true;
+    coreTextMat.map = bandTex; coreTextMat.needsUpdate = true;
+  }
+  // The soft dark backing behind the words, so they read through the fabric.
+  function makeShade() {
+    if (shadeTex) shadeTex.dispose();
+    shadeTex = canvasTex(Math.round(BAND_W / 4), Math.round(BAND_H / 4), (g, w, h) => {
+      g.fillStyle = "#000"; g.fillRect(0, 0, w, h); g.fillStyle = "#fff";
+      g.save(); g.scale(0.25, 0.25);
+      g.filter = "blur(10px)"; roundRect(g, 0, BAND_H * 0.04, BAND_W, BAND_H * 0.92, 40); g.fill(); g.filter = "none";
+      g.restore();
+    });
+    shadeTex.encoding = THREE.LinearEncoding; shadeTex.wrapS = THREE.RepeatWrapping;
+    shadeMat.alphaMap = shadeTex; shadeMat.needsUpdate = true;
+  }
+  const bezelMat = new THREE.MeshStandardMaterial({ color: 0x161918, roughness: 0.35, metalness: 0.15 });
+  // A real screen is solid: nothing from the light inside the speaker shows through it.
+  const screenMat = new THREE.MeshBasicMaterial({ color: 0x030404, transparent: true });
+  const flat = (w, h, mat, x, y, z, parent) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); m.position.set(x, y, z); parent.add(m); return m; };
+  // One screen on the front only: a raised fabric panel with a brass frame all round.
+  function buildFront(L) {
+    const pw = per.side - 0.02, ph = L.bandH, zf = D / 2 + 0.02, y = L.bandY;
+    makeBand(1536, Math.round(1536 * ph / pw));
+    FACES = { front: BAND_W / 2 }; FACE_W = BAND_W;
+    raised = new THREE.Mesh(roundedBox(pw + 0.05, ph + 0.05, 0.06, 0.02, 6, false), bandCasingMat);
+    raised.position.set(0, y, zf - 0.03); sleeve.add(raised);
+    bandTexMap.repeat.set(pw, ph); bandGlowMap.repeat.copy(bandTexMap.repeat);
+    shadeMesh = flat(pw, ph - 0.016, screenMat, 0, y, zf + 0.0015, sleeve);
+    textMesh = flat(pw, ph - 0.016, textMat, 0, y, zf + 0.004, sleeve);
+    const t = 0.012, bw = pw + t, bh = ph + t;
+    brass = [[0, bh / 2, bw, t], [0, -bh / 2, bw, t], [bw / 2, 0, t, bh], [-bw / 2, 0, t, bh]].map(([x, dy, w, h]) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.006), brassMat); m.position.set(x, y + dy, zf + 0.003); sleeve.add(m); return m;
+    });
+    const zc = (D - 0.09) / 2 + 0.002;
+    coreShade = flat(pw, ph, coreMat, 0, y, zc, bottomSec);
+    coreText = flat(pw, ph, coreTextMat, 0, y, zc + 0.003, bottomSec);
+    makeShade();
+  }
+  // A small LCD on the front: a dark bezel and a dot-matrix window, 128 by 40 dots.
+  function buildLcd(L) {
+    const lh = L.bandH, lw = lh * 3.2, zf = D / 2 + 0.012, y = L.bandY;
+    makeBand(1024, 320);
+    FACES = { front: BAND_W / 2 }; FACE_W = BAND_W;
+    raised = new THREE.Mesh(roundedBox(lw + 0.045, lh + 0.045, 0.03, 0.014, 6, false), bezelMat);
+    raised.position.set(0, y, zf - 0.015); sleeve.add(raised);
+    textMesh = flat(lw, lh, textMat, 0, y, zf + 0.0008, sleeve);
+  }
+  function buildLook() {
+    const L = state.look;
+    bodies.forEach(b => { b.geometry.dispose(); b.geometry = roundedBox(W, H, D, R, 40, true); });
+    chassis.geometry.dispose(); chassis.geometry = roundedBox(W - 0.09, H - 0.06, D - 0.09, R - 0.04, 24, true);
+    [shadeMesh, textMesh, coreShade, coreText, raised, lipTop, lipBot, ...brass].forEach(m => { if (m) { m.parent.remove(m); m.geometry.dispose(); } });
+    shadeMesh = textMesh = coreShade = coreText = raised = lipTop = lipBot = null; brass = [];
+    per = perimeter(0.006);
+    if (L.screen === "front") buildFront(L);
+    else if (L.screen === "lcd") buildLcd(L);
+    if (L.screen === "wrap") {
+    makeBand(6144, Math.round(6144 * L.bandH / (per.L * taper(L.bandY))));
+    const y0 = L.bandY - L.bandH / 2, y1 = L.bandY + L.bandH / 2;
+    // The screen stands out from the casing like a band with real depth, framed by brass rims.
+    const DEPTH = 0.02;
+    raised = new THREE.Mesh(strip(DEPTH, y0, y1), bandCasingMat); sleeve.add(raised);
+    lipTop = new THREE.Mesh(lip(y1, -0.002, DEPTH, 1), bandCasingMat); sleeve.add(lipTop);
+    lipBot = new THREE.Mesh(lip(y0, -0.002, DEPTH, -1), bandCasingMat); sleeve.add(lipBot);
+    bandTexMap.repeat.set(per.L * taper(L.bandY), L.bandH); bandGlowMap.repeat.copy(bandTexMap.repeat);
+    shadeMesh = new THREE.Mesh(strip(DEPTH + 0.0015, y0 + 0.008, y1 - 0.008), shadeMat); sleeve.add(shadeMesh);
+    textMesh = new THREE.Mesh(strip(DEPTH + 0.004, y0 + 0.008, y1 - 0.008), textMat); sleeve.add(textMesh);
+    brass = [[y1 - 0.006, y1 + 0.006], [y0 - 0.006, y0 + 0.006]].map(([a, b]) => { const m = new THREE.Mesh(strip(DEPTH + 0.003, a, b), brassMat); sleeve.add(m); return m; });
+    coreShade = new THREE.Mesh(strip(-0.042, y0, y1), coreMat); bottomSec.add(coreShade);
+    coreText = new THREE.Mesh(strip(-0.038, y0, y1), coreTextMat); bottomSec.add(coreText);
+    // Where each flat side sits on the canvas (x of its centre), and how wide it is.
+    const sideX = k => { let u = 1 - (per.q * (k + 1) + per.side * (k + 0.5)) / per.L + per.q / 2 / per.L; u -= Math.floor(u); return u * BAND_W; };
+    FACES = { front: sideX(0), left: sideX(1), back: sideX(2), right: sideX(3) };
+    FACE_W = (per.side + per.q * 0.9) / per.L * BAND_W;
+    makeShade();
+    }
+    setBox(false);
+    syncScreenControls();
+    // The top plate, ring and microphones sit on the narrower top of the lantern.
+    const t = taper(H / 2);
+    plate.scale.set(t, 1, t); ring.scale.set(t, t, t);
+    mics.forEach(m => m.position.set(m.userData.xz[0] * t, H / 2 + 0.0145, m.userData.xz[1] * t));
+    paintCasing();
+    offset = 0; layoutCache = null;
+    redrawBand();
+    buildAddon();
+  }
+  // A mihrab arch: straight sides, then two curves meeting in a point.
+  // With arches drawn, each side's content sits inside its arch, below where the arch starts to curve.
+  // A one-sided screen always shows the ayah and its translation together; the layouts are for the wrap-around screen.
+  const lay = () => state.look.screen === "wrap" ? state.layout : "all";
+  const framedNow = () => state.frames && !(state.mode === "recite" && lay() === "run");
+  function setBox(framed) {
+    const top = framed ? BAND_H * 0.34 : 0;
+    HC = BAND_H - top - (framed ? BAND_H * 0.05 : 0);
+    Y = k => top + k * HC; S = k => k * HC;
+  }
+  function archPath(g, cx, fresh = true, k = 1) {
+    const aw = FACE_W * 0.8 * k, x0 = cx - aw / 2, x1 = cx + aw / 2, yb = BAND_H * (0.985 - (1 - k) * 0.3), ys = BAND_H * 0.36, ya = BAND_H * (0.03 + (1 - k) * 0.5);
+    if (fresh) g.beginPath();
+    g.moveTo(x0, yb); g.lineTo(x0, ys);
+    g.quadraticCurveTo(x0, ya + (ys - ya) * 0.15, cx, ya);
+    g.quadraticCurveTo(x1, ya + (ys - ya) * 0.15, x1, ys);
+    g.lineTo(x1, yb); g.closePath();
+  }
+
+  const QURAN = px => `400 ${px}px "Amiri Quran", Amiri, serif`, ARB = px => `700 ${px}px Amiri, serif`, EN = (px, wt = 500) => `${wt} ${px}px Figtree, sans-serif`;
+  let wordIdx = 0, runWords = [], layoutCache = null;
+  function ledNow(t) { return state.mode === "night" ? new THREE.Color("#ffad5c") : state.cycle ? new THREE.Color().setHSL((t / 14) % 1, 0.78, 0.62) : new THREE.Color(state.led); }
+  function clear() { bg.fillStyle = "#000"; bg.fillRect(0, 0, BAND_W, BAND_H); }
+  function finish(led) {
+    if (framedNow()) {
+      // Mihrab arches drawn on the screen: a line, a fainter inner line, and a small star under the point.
+      bg.strokeStyle = led; bg.fillStyle = led;
+      Object.values(FACES).forEach(fx => {
+        bg.globalAlpha = 0.6; bg.lineWidth = 7; archPath(bg, fx); bg.stroke();
+        bg.globalAlpha = 0.28; bg.lineWidth = 3; archPath(bg, fx, true, 0.92); bg.stroke();
+        bg.globalAlpha = 0.7; star8(bg, fx, BAND_H * 0.19, BAND_H * 0.04, Math.PI / 8); bg.fill();
+      });
+      bg.globalAlpha = 1;
+    }
+    bg.fillStyle = "rgba(0,0,0,0.4)";
+    for (let x = 0; x < BAND_W; x += 5) bg.fillRect(x, 0, 1.2, BAND_H);
+    for (let y = 0; y < BAND_H; y += 5) bg.fillRect(0, y, BAND_W, 1.2);
+    bandTex.needsUpdate = true;
+  }
+  const TEXT = "#f4efe4", SOFT = "rgba(232,226,212,0.75)", DIM = "rgba(232,226,212,0.32)";
+  function wordColor(gi, led) { return gi === wordIdx ? led : gi < wordIdx ? TEXT : DIM; }
+  function firstWordOf(ai) { return WORDS.findIndex(w => w.ai === ai); }
+  // Arabic words right to left, centred on cx, on one line when it fits at a readable size, otherwise two.
+  function arabicBlock(ai, cx, maxW, size, topY, bottomY, led, track) {
+    const words = AYAHS[ai].ar.split(" "), g0 = firstWordOf(ai);
+    let A = size, lines;
+    for (let tries = 0; tries < 14; tries++) {
+      bg.font = QURAN(A); bg.direction = "rtl";
+      const sp = bg.measureText(" ").width, wid = words.map(w => bg.measureText(w).width);
+      const lineW = arr => arr.reduce((s, i) => s + wid[i], 0) + sp * (arr.length - 1);
+      const all = words.map((_, i) => i), avail = bottomY - topY, fit = A * maxW / lineW(all);
+      if (tries === 0 && fit < A && fit >= size * 0.6 && fit * 1.45 <= avail) { A = fit; continue; }
+      if (lineW(all) <= maxW * 1.001 && A * 1.45 <= avail) lines = [all];
+      else { const half = Math.ceil(words.length / 2), l1 = all.slice(0, half), l2 = all.slice(half); if (Math.max(lineW(l1), lineW(l2)) <= maxW && A * 2.7 <= avail) lines = [l1, l2]; }
+      if (lines) {
+        const lh = A * 1.35, total = lh * lines.length, y0 = topY + (avail - total) / 2 + A * 0.95;
+        lines.forEach((ln, li) => {
+          let x = cx + lineW(ln) / 2;
+          bg.textAlign = "right"; bg.textBaseline = "alphabetic";
+          ln.forEach(i => {
+            const gi = g0 + i;
+            bg.fillStyle = wordColor(gi, led);
+            if (gi === wordIdx) { bg.shadowColor = led; bg.shadowBlur = A * 0.25; }
+            bg.fillText(words[i], x, y0 + li * lh); bg.shadowBlur = 0;
+            if (track) runWords[gi] = (x - wid[i] / 2) / BAND_W;
+            x -= wid[i] + sp;
+          });
+        });
+        return { left: cx - Math.max(...lines.map(lineW)) / 2, A };
+      }
+      A *= 0.9;
+    }
+    return { left: cx, A };
+  }
+  function wrapLines(text, maxW, px) {
+    bg.font = EN(px); bg.direction = "ltr";
+    const out = []; let line = "";
+    text.split(" ").forEach(w => { const t = line ? line + " " + w : w; if (bg.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; });
+    if (line) out.push(line);
+    return out;
+  }
+  function englishBlock(ai, cx, maxW, px, topY, bottomY, active) {
+    let lines = wrapLines(AYAHS[ai].en, maxW, px);
+    while (lines.length * px * 1.3 > bottomY - topY && px > 18) { px *= 0.9; lines = wrapLines(AYAHS[ai].en, maxW, px); }
+    const lh = px * 1.3, y0 = topY + (bottomY - topY - lh * lines.length) / 2 + px;
+    bg.font = EN(px); bg.textAlign = "center"; bg.textBaseline = "alphabetic"; bg.direction = "ltr";
+    bg.fillStyle = active ? TEXT : SOFT;
+    lines.forEach((l, i) => bg.fillText(l, cx, y0 + i * lh));
+  }
+  function textAt(txt, cx, y, font, color, rtl) {
+    bg.font = font; bg.direction = rtl ? "rtl" : "ltr"; bg.textAlign = "center"; bg.textBaseline = "middle"; bg.fillStyle = color;
+    bg.fillText(txt, cx, y);
+  }
+  function heading(text, cx, y, px, led) { textAt(text, cx, y, EN(px, 600), led); }
+  // The traditional end-of-ayah ornament with its number inside.
+  function ayahMark(n, x, y, px, led) { textAt("۝" + n, x, y, QURAN(px), led, true); }
+  function hijri(d) {
+    try { return new Intl.DateTimeFormat("en-u-ca-islamic-umalqura", { day: "numeric", month: "long", year: "numeric" }).format(d); } catch (e) { return ""; }
+  }
+  // Masjid al-Haram in line art: the Kaaba with its gold band, between two minarets.
+  function drawHaram(x, y, s, led) {
+    bg.save(); bg.translate(x, y); bg.strokeStyle = led; bg.lineWidth = Math.max(3, s * 0.03); bg.lineCap = "round";
+    bg.fillStyle = "#000"; bg.fillRect(-s * 0.32, -s * 0.5, s * 0.64, s * 0.62); bg.strokeRect(-s * 0.32, -s * 0.5, s * 0.64, s * 0.62);
+    bg.fillStyle = "#e4b24a"; bg.fillRect(-s * 0.32, -s * 0.36, s * 0.64, s * 0.07);
+    [-1, 1].forEach(d => {
+      const mx = d * s * 0.78; bg.strokeRect(mx - s * 0.05, -s * 0.95, s * 0.1, s * 1.07);
+      bg.beginPath(); bg.moveTo(mx - s * 0.05, -s * 0.95); bg.lineTo(mx, -s * 1.1); bg.lineTo(mx + s * 0.05, -s * 0.95); bg.stroke();
+    });
+    bg.beginPath(); bg.moveTo(-s * 1.05, s * 0.12); bg.lineTo(s * 1.05, s * 0.12); bg.stroke();
+    for (let i = -3; i <= 3; i++) { if (!i) continue; bg.beginPath(); bg.arc(i * s * 0.26, s * 0.12, s * 0.09, Math.PI, 0); bg.stroke(); }
+    bg.restore();
+  }
+  function drawSide(kind, fx, cur, led) {
+    const fw = FACE_W * (framedNow() ? 0.68 : 0.9);
+    if (kind === "arabic") {
+      heading(`Al-Fatiha · Ayah ${cur + 1}`, fx, Y(0.09), S(0.055), led);
+      arabicBlock(cur, fx, fw, S(0.32), Y(0.15), Y(0.98), led);
+    } else if (kind === "english") {
+      heading("Sahih International", fx, Y(0.09), S(0.05), led);
+      englishBlock(cur, fx, fw * 0.95, S(0.1), Y(0.16), Y(0.96), true);
+    } else if (kind === "info") {
+      textAt("سورة الفاتحة", fx, Y(0.34), ARB(S(0.22)), led, true);
+      textAt("Al-Fatiha · The Opening", fx, Y(0.64), EN(S(0.08), 600), TEXT);
+      textAt(`Ayah ${cur + 1} of 7 · Makki`, fx, Y(0.83), EN(S(0.06)), SOFT);
+    } else if (kind === "prayer") {
+      heading("Next prayer", fx, Y(0.12), S(0.055), led);
+      textAt("Asr  3:42 pm", fx, Y(0.42), EN(S(0.15), 600), TEXT);
+      textAt("in 25 minutes", fx, Y(0.66), EN(S(0.075)), led);
+      textAt("Maghrib 5:28 pm · example", fx, Y(0.85), EN(S(0.055)), SOFT);
+    } else if (kind === "clock") {
+      const d = new Date();
+      textAt(d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), fx, Y(0.34), EN(S(0.2), 600), TEXT);
+      textAt(hijri(d), fx, Y(0.64), EN(S(0.07), 600), led);
+      textAt(d.toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" }), fx, Y(0.83), EN(S(0.055)), SOFT);
+    } else if (kind === "place") {
+      drawHaram(fx, Y(0.46), S(0.28), led);
+      textAt("Masjid al-Haram, Makkah", fx, Y(0.86), EN(S(0.065), 600), TEXT);
+    }
+  }
+
+  function drawRecite(t) {
+    const led = "#" + ledNow(t).getHexString(), cur = WORDS[wordIdx].ai;
+    setBox(framedNow());
+    clear();
+    if (lay() === "run") {
+      // Ayahs side by side, right to left, each with its heading, Arabic and translation.
+      const gap = BAND_W * 0.03, n = AYAHS.length, blockW = (BAND_W - gap * n) / n;
+      let x = BAND_W - gap / 2;
+      AYAHS.forEach((a, ai) => {
+        const w = blockW * (ai === 0 ? 1.15 : ai === n - 1 ? 0.85 : 1), cx = x - w / 2;
+        heading(`Al-Fatiha · ${ai + 1}`, cx, Y(0.09), S(0.055), led);
+        arabicBlock(ai, cx, w * 0.96, S(0.3), Y(0.14), Y(0.68), led, true);
+        englishBlock(ai, cx, w * 0.92, S(0.072), Y(0.7), Y(0.97), ai === cur);
+        ayahMark(a.n, x - w - gap / 2, Y(0.44), S(0.14), led);
+        x -= w + gap;
+      });
+    } else if (lay() === "split") {
+      SIDES.forEach(([id]) => drawSide(id === "front" || id === "back" ? "arabic" : "english", FACES[id], cur, led));
+    } else if (lay() === "four") {
+      SIDES.forEach(([id]) => drawSide(state.sides[id], FACES[id], cur, led));
+    } else {
+      const fw = FACE_W * (framedNow() ? 0.68 : 0.9);
+      Object.values(FACES).forEach(fx => {
+        heading(`Al-Fatiha · Ayah ${cur + 1}`, fx, Y(0.08), S(0.05), led);
+        arabicBlock(cur, fx, fw, S(0.25), Y(0.13), Y(0.64), led);
+        englishBlock(cur, fx, fw * 0.95, S(0.068), Y(0.66), Y(0.97), true);
+      });
+    }
+    finish(led);
+  }
+
+  const MESSAGES = {
+    listen: ["Listening…", "“Assalamu alaikum, Ustadh. Play Surah Al-Mulk.”"],
+    prayer: ["Asr  3:42 pm", "in 25 minutes", "Maghrib 5:28 pm  ·  Karachi"],
+    respect: ["سورة الفاتحة", "Al-Fatiha  ·  Ayah 2 of 7"],
+    night: ["Surah Al-Mulk", "sleep timer 20 min"],
+    places: ["مكة المكرمة", "Masjid al-Haram, Makkah"],
+    stories: ["Stories of the Prophets", "Prophet Yunus, peace be upon him", "part 2 of 5"],
+  };
+  function drawMessage(t) {
+    const parts = MESSAGES[state.mode], led = "#" + ledNow(t).getHexString(), fw = FACE_W * (framedNow() ? 0.68 : 0.92);
+    setBox(framedNow());
+    clear();
+    Object.values(FACES).forEach(cx => {
+      if (state.mode === "places") drawHaram(cx, Y(0.4), S(0.28), led);
+      const rows = parts.length, top = state.mode === "places" ? Y(0.62) : Y(0.1), span = Y(0.92) - top;
+      parts.forEach((p, j) => {
+        const ar = /[؀-ۿ]/.test(p), big = j === 0;
+        let px = ar ? S(big ? 0.24 : 0.13) : S(big ? 0.12 : 0.07);
+        if (state.mode === "places") px *= big ? 0.62 : 0.85;
+        const font = () => ar ? ARB(px) : EN(px, big ? 600 : 500);
+        bg.font = font();
+        while (bg.measureText(p).width > fw && px > 14) { px *= 0.92; bg.font = font(); }
+        textAt(p, cx, top + span * ((j + 0.5) / rows), font(), big ? (state.mode === "night" ? "rgba(255,190,120,0.6)" : led) : SOFT, ar);
+      });
+    });
+    finish(led);
+  }
+  // Screens that change as they play: bayan, dhikr counter, timer, holy places, qaida.
+  const SPECIAL = ["bayan", "dhikr", "timer", "places", "qaida"];
+  const DHIKR = [["سُبْحَانَ اللَّهِ", "SubhanAllah"], ["الْحَمْدُ لِلَّهِ", "Alhamdulillah"], ["اللَّهُ أَكْبَرُ", "Allahu Akbar"]];
+  const PLACES = [["المسجد الحرام", "Masjid al-Haram, Makkah", "haram"], ["المسجد النبوي", "Masjid an-Nabawi, Madinah", "nabawi"], ["المسجد الأقصى", "Al-Aqsa, Al-Quds", "aqsa"]];
+  const QAIDA = [["ا", "Alif"], ["ب", "Ba"], ["ت", "Ta"], ["ث", "Tha"], ["ج", "Jeem"]];
+  const mmss = n => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+  function minarets(s, led) {
+    [-1, 1].forEach(d => {
+      const mx = d * s * 0.78; bg.strokeRect(mx - s * 0.05, -s * 0.95, s * 0.1, s * 1.07);
+      bg.beginPath(); bg.moveTo(mx - s * 0.05, -s * 0.95); bg.lineTo(mx, -s * 1.1); bg.lineTo(mx + s * 0.05, -s * 0.95); bg.stroke();
+    });
+    bg.beginPath(); bg.moveTo(-s * 1.05, s * 0.12); bg.lineTo(s * 1.05, s * 0.12); bg.stroke();
+  }
+  // Masjid an-Nabawi in line art: the green dome on its drum, between two minarets.
+  function drawNabawi(x, y, s, led) {
+    bg.save(); bg.translate(x, y); bg.strokeStyle = led; bg.lineWidth = Math.max(3, s * 0.03); bg.lineCap = "round";
+    bg.strokeRect(-s * 0.32, -s * 0.12, s * 0.64, s * 0.24);
+    bg.fillStyle = "#1d7a46"; bg.beginPath(); bg.moveTo(-s * 0.28, -s * 0.12);
+    bg.quadraticCurveTo(-s * 0.31, -s * 0.64, 0, -s * 0.7); bg.quadraticCurveTo(s * 0.31, -s * 0.64, s * 0.28, -s * 0.12); bg.closePath(); bg.fill(); bg.stroke();
+    bg.beginPath(); bg.moveTo(0, -s * 0.7); bg.lineTo(0, -s * 0.84); bg.stroke();
+    minarets(s, led);
+    bg.restore();
+  }
+  // Al-Aqsa in line art: the golden Dome of the Rock on its eight-sided base.
+  function drawAqsa(x, y, s, led) {
+    bg.save(); bg.translate(x, y); bg.strokeStyle = led; bg.lineWidth = Math.max(3, s * 0.03); bg.lineCap = "round";
+    bg.strokeRect(-s * 0.5, -s * 0.16, s * 1.0, s * 0.28);
+    for (let i = -3; i <= 3; i++) { bg.beginPath(); bg.arc(i * s * 0.13, -s * 0.02, s * 0.04, Math.PI, 0); bg.stroke(); }
+    bg.strokeRect(-s * 0.24, -s * 0.32, s * 0.48, s * 0.16);
+    bg.fillStyle = "#d9a93a"; bg.beginPath(); bg.moveTo(-s * 0.26, -s * 0.32);
+    bg.quadraticCurveTo(-s * 0.28, -s * 0.8, 0, -s * 0.82); bg.quadraticCurveTo(s * 0.28, -s * 0.8, s * 0.26, -s * 0.32); bg.closePath(); bg.fill(); bg.stroke();
+    bg.beginPath(); bg.moveTo(0, -s * 0.82); bg.lineTo(0, -s * 0.96); bg.stroke();
+    bg.beginPath(); bg.moveTo(-s * 1.05, s * 0.12); bg.lineTo(s * 1.05, s * 0.12); bg.stroke();
+    bg.restore();
+  }
+  function bar(cx, y, w, h, frac, led) {
+    bg.fillStyle = DIM; roundRect(bg, cx - w / 2, y, w, h, h / 2); bg.fill();
+    bg.fillStyle = led; roundRect(bg, cx - w / 2, y, Math.max(h, w * frac), h, h / 2); bg.fill();
+  }
+  function drawSpecial(t) {
+    const led = "#" + ledNow(t).getHexString(), fw = FACE_W * (framedNow() ? 0.68 : 0.9);
+    setBox(framedNow()); clear();
+    SIDES.forEach(([id], fi) => {
+      const fx = FACES[id], side = fi % 2;   // 0: front and back, 1: right and left
+      if (fx === undefined) return;          // a front-only screen has no other sides
+      if (state.mode === "bayan") {
+        const el = 760 + Math.floor(clock);
+        if (!side) {
+          heading("Bayan", fx, Y(0.08), S(0.05), led);
+          textAt("Scholar's name", fx, Y(0.26), EN(S(0.12), 600), TEXT);
+          textAt("Topic · Sabr, patience", fx, Y(0.43), EN(S(0.065)), led);
+          const n = 40, bw = fw * 0.8 / n, prog = el / 2700;
+          for (let i = 0; i < n; i++) {
+            const a = 0.2 + 0.8 * Math.abs(Math.sin(i * 0.7 + clock * 3.1) * Math.sin(i * 0.23 + clock * 1.7));
+            bg.fillStyle = i < n * prog ? led : DIM;
+            bg.fillRect(fx - fw * 0.4 + i * bw, Y(0.65) - S(0.09) * a, bw * 0.6, S(0.18) * a);
+          }
+          textAt(`${mmss(el)} / 45:00`, fx, Y(0.9), EN(S(0.055)), SOFT);
+        } else {
+          heading("Translation", fx, Y(0.08), S(0.05), led);
+          ["The scholar's own published subtitles", "appear here in Urdu or English,", "line by line with the bayan."]
+            .forEach((l, i) => textAt(l, fx, Y(0.34 + i * 0.2), EN(S(0.068)), i ? SOFT : TEXT));
+        }
+      } else if (state.mode === "dhikr") {
+        const count = Math.floor(clock / 1.1) % 99, ph = DHIKR[Math.floor(count / 33)], n = count % 33 + 1;
+        textAt(ph[0], fx, Y(0.26), ARB(S(0.24)), led, true);
+        textAt(ph[1], fx, Y(0.52), EN(S(0.07), 600), TEXT);
+        textAt(`${n} / 33`, fx, Y(0.7), EN(S(0.1), 600), TEXT);
+        const bw = fw * 0.86 / 33;
+        for (let i = 0; i < 33; i++) { bg.fillStyle = i < n ? led : DIM; bg.beginPath(); bg.arc(fx - fw * 0.43 + (i + 0.5) * bw, Y(0.89), Math.min(bw * 0.32, S(0.025)), 0, Math.PI * 2); bg.fill(); }
+      } else if (state.mode === "timer") {
+        const left = Math.max(0, 900 - Math.floor(clock));
+        heading("Quran reading timer", fx, Y(0.1), S(0.05), led);
+        textAt(mmss(left), fx, Y(0.4), EN(S(0.25), 600), TEXT);
+        bar(fx, Y(0.65), fw * 0.76, S(0.035), 1 - left / 900, led);
+        textAt("Then a spoken reminder to rest", fx, Y(0.86), EN(S(0.058)), SOFT);
+      } else if (state.mode === "places") {
+        const pl = PLACES[Math.floor(clock / 6) % 3];
+        ({ haram: drawHaram, nabawi: drawNabawi, aqsa: drawAqsa })[pl[2]](fx, Y(0.44), S(0.3), led);
+        textAt(pl[0], fx, Y(0.72), ARB(S(0.1)), led, true);
+        textAt(pl[1], fx, Y(0.9), EN(S(0.06), 600), TEXT);
+      } else if (state.mode === "qaida") {
+        heading("Noorani Qaida · lesson 1", fx, Y(0.08), S(0.05), led);
+        const cur = Math.floor(clock / 1.6) % QAIDA.length, gap = fw * 0.9 / QAIDA.length;
+        QAIDA.forEach(([l], i) => textAt(l, fx + fw * 0.45 - (i + 0.5) * gap, Y(0.44), ARB(S(i === cur ? 0.34 : 0.24)), i === cur ? led : SOFT, true));
+        textAt(QAIDA[cur][1], fx, Y(0.82), EN(S(0.09), 600), TEXT);
+      }
+    });
+    finish(led);
+  }
+  // ---------- The small LCD ----------
+  // Two short lines drawn at 128 by 40 dots, then shown as lit dots on dark glass, like a real dot-matrix LCD.
+  // It has room for a few words, so it shows where the recitation is, never the verse itself.
+  const lcdLow = document.createElement("canvas"); lcdLow.width = 128; lcdLow.height = 40;
+  const lg = lcdLow.getContext("2d", { willReadFrequently: true });
+  function lcdLines() {
+    const cur = WORDS[wordIdx].ai + 1, d = new Date();
+    const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    if (state.mode === "recite") return [`Al-Fatiha ${cur}`, `Ayah ${cur} of 7`, (wordIdx + 1) / WORDS.length];
+    if (state.mode === "listen") return ["Listening", "Assalamu alaikum"];
+    if (state.mode === "bayan") { const el = 760 + Math.floor(clock); return ["Bayan: Sabr", `${mmss(el)} / 45:00`, el / 2700]; }
+    if (state.mode === "dhikr") { const count = Math.floor(clock / 1.1) % 99, n = count % 33 + 1; return [DHIKR[Math.floor(count / 33)][1], `${n} / 33`, n / 33]; }
+    if (state.mode === "timer") { const left = Math.max(0, 900 - Math.floor(clock)); return ["Reading timer", mmss(left), 1 - left / 900]; }
+    if (state.mode === "prayer") return ["Asr 3:42 pm", "in 25 minutes"];
+    if (state.mode === "places") return [["Masjid al-Haram", "Masjid an-Nabawi", "Al-Aqsa"][Math.floor(clock / 6) % 3], "Makkah  Madinah  Quds".split("  ")[Math.floor(clock / 6) % 3]];
+    if (state.mode === "qaida") { const q = QAIDA[Math.floor(clock / 1.6) % QAIDA.length]; return ["Qaida lesson 1", q[1]]; }
+    if (state.mode === "stories") return ["Prophet Yunus (AS)", "part 2 of 5"];
+    if (state.mode === "respect") return ["Al-Fatiha", "Ayah 2 of 7"];
+    if (state.mode === "night") return ["Surah Al-Mulk", "sleep in 20 min"];
+    return [time, hijri(d)];
+  }
+  function drawLcd(t) {
+    const [l1, l2, frac] = lcdLines(), led = ledNow(t), night = state.mode === "night";
+    lg.fillStyle = "#000"; lg.fillRect(0, 0, 128, 40);
+    lg.fillStyle = "#fff"; lg.textAlign = "center"; lg.textBaseline = "middle";
+    lg.font = "700 14px Figtree, sans-serif"; lg.fillText(l1, 64, 10, 124);
+    lg.font = "600 11px Figtree, sans-serif"; lg.fillText(l2, 64, frac === undefined ? 28 : 25, 124);
+    if (frac !== undefined) lg.fillRect(8, 35, Math.max(1, 112 * Math.min(1, frac)), 2);
+    const px = lg.getImageData(0, 0, 128, 40).data, on = "#" + led.clone().multiplyScalar(night ? 0.55 : 1).getHexString();
+    bg.fillStyle = "#050807"; bg.fillRect(0, 0, BAND_W, BAND_H);
+    const c = BAND_W / 128, r = c * 0.43;
+    for (let y = 0; y < 40; y++) for (let x = 0; x < 128; x++) {
+      const lit = px[(y * 128 + x) * 4] > 100;
+      bg.fillStyle = lit ? on : "rgba(255,255,255,0.045)";
+      bg.fillRect(x * c + c / 2 - r, y * c + c / 2 - r, r * 2, r * 2);
+    }
+    bandTex.needsUpdate = true;
+  }
+  function redrawBand(t = clock) {
+    if (!bg || state.look.screen === "none") return;
+    if (state.look.screen === "lcd") return drawLcd(t);
+    state.mode === "recite" ? drawRecite(t) : SPECIAL.includes(state.mode) ? drawSpecial(t) : drawMessage(t);
+  }
+
+  function setMode(id) {
+    const wasNight = state.mode === "night";
+    state.mode = id; wordIdx = 0; wordClock = 0;
+    if (state.pattern !== "none" && wasNight !== (id === "night")) glowTex.redraw();   // night turns colourful patterns warm
+    $("modeDesc").textContent = MODES.find(x => x.id === id).desc;
+    showNow();
+    redrawBand();
+    if (typeof syncPlayer === "function") syncPlayer();
+  }
+  // The line over the 3D speaker saying what it is doing.
+  function showNow() {
+    $("now").innerHTML = state.standby ? "<b>Standby</b> · press the power button on the remote or in the app to wake it"
+      : state.listening ? `<b>Listening</b> through the phone · about ${MODES.find(x => x.id === state.mode).name} · speaker turned down` : { recite: "<b>Reciting</b> · Al-Fatiha", listen: "<b>Listening</b>", bayan: "<b>Bayan</b> · approved scholar", dhikr: "<b>Dhikr</b> · counting with you",
+      timer: "<b>Timer</b> · Quran reading", prayer: "<b>Next prayer</b> · Asr (example)", places: "<b>Holy places</b>", qaida: "<b>Qaida</b> · lesson 1",
+      stories: "<b>Stories</b> · Prophet Yunus (AS)", respect: "<b>Respectful mode</b>", night: "<b>Night</b> · sleep timer on" }[state.mode];
+  }
+
+  // ---------- Camera: drag to turn and tilt, or pick a view ----------
+  let yaw = -0.35, elev = 0.16, goal = null, dragging = false, lastX = 0, lastY = 0, lastTouch = -10;
+  function goView(v) { state.view = v.id; goal = { elev: v.elev, yaw: v.id === "top" || v.id === "bottom" ? null : v.yaw }; lastTouch = clock; }
+  canvas.addEventListener("pointerdown", e => { dragging = true; goal = null; lastX = e.clientX; lastY = e.clientY; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener("pointermove", e => {
+    if (!dragging) return;
+    yaw += (e.clientX - lastX) * 0.01; elev = Math.max(-1.45, Math.min(1.45, elev + (e.clientY - lastY) * 0.008));
+    lastX = e.clientX; lastY = e.clientY; lastTouch = clock;
+    if (state.view) { state.view = null; syncViews(); }
+  });
+  const stop = () => { dragging = false; };
+  canvas.addEventListener("pointerup", stop); canvas.addEventListener("pointercancel", stop);
+  function placeCamera() {
+    const dist = 4.7 + 1.5 * openE, ty = -0.05 + 0.2 * openE;   // step back while the cover is off
+    camera.position.set(0, ty + Math.sin(elev) * dist, Math.cos(elev) * dist);
+    camera.lookAt(0, ty, 0);
+  }
+  function resize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(canvas);
+
+  // ---------- Animation ----------
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let clock = 0, wordClock = 0, offset = 0, lastRedraw = 0, lastGlow = 0, lastSync = -1, prev = performance.now();
+  const WHITE = new THREE.Color(1, 1, 1);
+  function frontU() {
+    const dx = -Math.sin(speaker.rotation.y), dz = Math.cos(speaker.rotation.y);
+    let best = per.pts[0], bd = -2;
+    per.pts.forEach(p => { const d = p.nx * dx + p.nz * dz; if (d > bd) { bd = d; best = p; } });
+    return best.u;
+  }
+  function frame(now) {
+    const dt = Math.max(0, Math.min(0.05, (now - prev) / 1000)); prev = Math.max(prev, now); clock += dt;   // never run backwards
+    const t = clock;
+    if (goal) {
+      elev += (goal.elev - elev) * Math.min(1, dt * 4);
+      if (goal.yaw !== null && !state.spin) yaw += (goal.yaw - yaw) * Math.min(1, dt * 4);
+      if (Math.abs(goal.elev - elev) < 0.002) goal = null;
+    } else if (!state.spin && !dragging && t - lastTouch > 4 && state.view !== "top" && state.view !== "bottom") {
+      yaw += ((-0.35 + (reduce ? 0 : 0.4 * Math.sin(t * 0.22))) - yaw) * 0.02;
+    }
+    if (state.spin) yaw += dt * 0.35;
+    speaker.rotation.y = yaw;
+    if (state.tour && !state.standby && t - tourT > 7) {
+      tourT = t;
+      const i = TOPICS.findIndex(m => m.id === state.mode);
+      setMode(TOPICS[(i + 1) % TOPICS.length].id); syncModes();
+    }
+    // Changing the cover: the top lifts off, then the cover with its screen borders slides up; the bottom and base drop a little.
+    openE += ((state.open ? 1 : 0) - openE) * Math.min(1, dt * 2.2);
+    const ease = x => x * x * (3 - 2 * x), e1 = ease(Math.min(1, openE / 0.5)), e2 = ease(Math.max(0, (openE - 0.4) / 0.6));
+    const topOff = 0.5 * e1, slOff = 0.3 * e2, botOff = -0.14 * e1;
+    topSec.position.y = topOff; sleeve.position.y = slOff; sleeve.scale.set(1 + 0.04 * e2, 1, 1 + 0.04 * e2);
+    bottomSec.position.y = botOff; baseGroup.position.y = botOff;
+    const Lk = state.look, cutHi = Lk.bandY + Lk.bandH / 2 + 0.035, cutLo = Lk.bandY - Lk.bandH / 2 - 0.035;
+    planes.top.constant = -(cutHi + topOff); planes.midLo.constant = -(cutLo + slOff);
+    planes.midHi.constant = cutHi + slOff; planes.bottom.constant = cutLo + botOff;
+    $("steps").hidden = openE < 0.05;
+    placeCamera();
+
+    // Standby: screen and lights off, one tiny dim light on the ring. Paused: no voice, the words stay where they are.
+    const sb = state.standby, still = sb || state.paused;
+    // While the phone listens, the recitation goes on quietly underneath (ducked), so the voice light is smaller too.
+    const voice = (state.mode === "recite" && !still ? Math.max(0, 0.5 + 0.28 * Math.sin(t * 9.1) + 0.16 * Math.sin(t * 5.3) + 0.12 * Math.sin(t * 13.7)) : 0) * (state.listening ? 0.25 : 1);
+    const led = ledNow(t);
+    const lvl = { recite: 0.32 + voice * 0.45, listen: 0.3 + 0.12 * Math.sin(t * 2.4), prayer: 0.38 + 0.18 * (0.5 + 0.5 * Math.sin(t * 0.8)), places: 0.36, stories: 0.3, respect: 0.34, night: 0.14 }[state.mode] ?? 0.34;
+    // The light inside colours the casing: ivory glows brightest, charcoal hardly at all, and off shows its own colour.
+    const lightOn = sb ? 0 : state.mode === "night" ? 0.35 : state.level, on = lightOn * state.casingGlow, pulse = 0.55 + lvl * 0.9;
+    // A colourful pattern carries its own colours, so the light behind it is white and the casing is not tinted.
+    const multi = state.pattern !== "none" && state.palette !== "mono" && state.mode !== "night";
+    casingMat.emissive.copy(multi ? WHITE : led);
+    casingMat.emissiveIntensity = on * pulse * (state.finish === "plastic" ? 0.55 : 0.38 * FAB[state.finish].glow) * (state.pattern === "none" ? 1 : multi ? 3.2 : 1.5);
+    // With colourful lights the fabric itself goes dim, as in a dark room, so the colours stay rich instead of washed out.
+    casingMat.color.setRGB(1, 1, 1).lerp(multi ? WHITE : led, Math.min(0.9, on * 0.9)).multiplyScalar(1 - on * (multi ? 0.8 : 0.45));
+    // A moving pattern is redrawn about twelve times a second.
+    if (state.move && !reduce && state.pattern !== "none" && t - lastGlow > 0.08) { patPhase = t; glowTex.redraw(); lastGlow = t; }
+    casingMats.forEach(m => { m.emissive.copy(casingMat.emissive); m.emissiveIntensity = casingMat.emissiveIntensity; m.color.copy(casingMat.color); });
+    // The fabric over a screen is never lit from inside: the screen blocks the LEDs behind it, so no light colour or
+    // pattern shows through, only the words. This holds for every shape (wrap-around band, front screen and its frame).
+    bandCasingMat.emissiveIntensity = 0; bandCasingMat.color.setRGB(1, 1, 1);
+    ringMat.color.copy(led).multiplyScalar(sb ? 0.03 : state.mode === "night" ? 0.35 : 0.7 + voice * 0.6);
+    seamMat.color.copy(led).multiplyScalar(0.08 + lightOn * (0.5 + lvl));
+    glowMat.color.copy(led); glowMat.opacity = lightOn * (0.25 + lvl * 0.6);
+    // The screen: barely visible behind the casing when hidden, a dark panel when glass.
+    shadeMat.opacity = (state.screen === "glass" ? 0.96 : 0.3) * (1 - e2);
+    textMat.opacity = (state.screen === "glass" || state.look.screen !== "wrap" ? 1 : 0.92) * (1 - e2) * (sb ? 0 : 1);
+    screenMat.opacity = 1 - e2;
+    coreTextMat.opacity = e2;
+    // The dome glows with the light inside, and breathes while it listens; the minaret balconies are lit.
+    const listening = state.listening || state.mode === "listen";
+    // Lights inside the add-ons: the dome glows in its own colour like a lamp, the lantern flickers, lights circle the Kaaba.
+    domeMat.emissive.copy(domeMat.color).multiplyScalar(lightOn * (state.addon === "gold" ? 0.25 : 0.45 + lvl * 0.35) * (listening ? 1 + 0.6 * Math.sin(t * 2.4) : 1));
+    stoneMat.emissive.copy(led).multiplyScalar(lightOn * 0.06);
+    marbleMat.emissive.copy(led).multiplyScalar(lightOn * 0.08);
+    lanternGlassMat.emissive.copy(led).multiplyScalar(0.05 + lightOn * (0.9 + 0.08 * Math.sin(t * 13) + 0.05 * Math.sin(t * 7.3)));
+    kaabaMat.emissiveIntensity = 0.15 + lightOn * 0.5;
+    tawafDots.forEach(d => { const b = Math.pow(Math.max(0, Math.cos(d.userData.a - t * 0.9)), 6); d.material.color.copy(led).multiplyScalar(0.15 + lightOn * (0.25 + 1.3 * b)); });
+    if (kaabaG && state.kaabaSpin) kaabaG.rotation.y += dt * 0.25;
+    lampMat.color.copy(led).multiplyScalar(0.25 + lightOn * 0.75);
+    dot.visible = (listening || sb) && ring.visible;
+    // Listening: the dot runs round the ring. Standby: it sits still at the front, softly breathing.
+    dot.material.color.setScalar(sb ? 0.18 + 0.1 * Math.sin(t * 1.2) : 1);
+    if (dot.visible) { const a = sb ? Math.PI / 2 : t * 4, r = 0.105 * taper(H / 2); dot.position.x = Math.cos(a) * r; dot.position.z = Math.sin(a) * r; }
+    if (t - lastSync > 0.25) { syncPlayer(); lastSync = t; }
+
+    if (state.mode === "recite") {
+      if (!still) wordClock += dt;
+      if (wordClock > (WORDS[wordIdx].last ? 1.5 : 0.72)) {
+        wordClock = 0;
+        // Repeat (hifz): at the end of an ayah, back to its first word instead of the next ayah.
+        wordIdx = WORDS[wordIdx].last && state.repeat ? firstWordOf(WORDS[wordIdx].ai) : (wordIdx + 1) % WORDS.length;
+        redrawBand(t); lastRedraw = t;
+      }
+      else if (state.cycle && t - lastRedraw > 0.6) { redrawBand(t); lastRedraw = t; }
+      if (lay() === "run" && runWords[wordIdx] !== undefined) {
+        let target = runWords[wordIdx] - frontU();
+        target -= Math.round(target - offset);
+        offset += (target - offset) * Math.min(1, dt * 2.2);
+      } else offset = 0;
+    } else {
+      offset = 0;
+      if ((SPECIAL.includes(state.mode) && t - lastRedraw > 0.25) || (state.cycle && t - lastRedraw > 0.6)) { redrawBand(t); lastRedraw = t; }
+    }
+    if (bandTex) bandTex.offset.x = state.look.screen === "wrap" ? offset : 0;
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+
+  buildLook();
+  setMode("recite");
+  const hv = VIEWS.find(v => "#" + v.id === location.hash);
+  if (hv) { state.view = hv.id; elev = hv.elev; if (hv.id !== "top" && hv.id !== "bottom") yaw = hv.yaw; syncViews(); }
+  resize();
+  requestAnimationFrame(frame);
+  const fontsReady = document.fonts && document.fonts.load
+    ? Promise.all(["400 100px 'Amiri Quran'", "400 100px Amiri", "700 60px Amiri", "500 30px Figtree", "600 56px Figtree", "600 64px 'Reem Kufi'"].map(f => document.fonts.load(f))).catch(() => {})
+    : Promise.resolve();
+  fontsReady.then(() => { redrawBand(); bottomTex.redraw(); makerTex.redraw(); });
+})();
+</script>
+
+</body></html>

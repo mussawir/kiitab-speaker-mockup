@@ -6,8 +6,8 @@ Interactive design mockups for the Kiitab speaker, covering both the software sc
 
 | Page | What it shows | Link |
 |------|---------------|------|
-| **Speaker software** | The on-screen interface of the Kiitab speaker | [Open](https://mussawir.github.io/kiitab-mockups/) |
-| **Speaker hardware** | The physical speaker: its parts, layout and how it is built | [Open](https://mussawir.github.io/kiitab-mockups/kiitab-speaker-hardware.html) |
+| **Speaker software** | The on-screen interface of the Kiitab speaker | [Open](https://mussawir.github.io/kiitab-speaker-mockup/) |
+| **Speaker hardware** | The physical speaker: its parts, layout and how it is built | [Open](https://mussawir.github.io/kiitab-speaker-mockup/kiitab-speaker-hardware.html) |
 
 Click a link to open the page in your web browser. No installation or account is needed.
 

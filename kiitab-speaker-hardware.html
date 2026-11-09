@@ -1,0 +1,1040 @@
+<title>Kiitab Speaker Hardware</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Reem+Kufi:wght@500;600&display=swap">
+<style>
+/* Layout: an engineering study of the Plain model. The speaker on a dark stage you can open up, the part card beside
+   it, then the parts list, how it turns, the wiring and the power budget. Same palette and faces as the Kiitab mockup. */
+:root {
+  --bg: #edefea; --surface: #f7f8f5; --fg: #18211d; --muted: #59655e; --line: #d4d9d2;
+  --accent: #8f6419; --accent-2: #0f6b4f; --chip: #e3e7e0; --card: #ffffff;
+  --g-cover: #9a7b4f; --g-sound: #3f6fb5; --g-boards: #1f8a5b; --g-motion: #c0562f; --g-light: #a0479b; --g-power: #b8902a;
+  --display: "Reem Kufi", "Segoe UI", system-ui, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", Consolas, monospace;
+  --arabic: "Amiri", "Traditional Arabic", serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1412; --surface: #161d1a; --fg: #e6ebe7; --muted: #97a39c; --line: #27312c;
+  --accent: #d9a84e; --accent-2: #45c993; --chip: #1f2823; --card: #1b2521;
+  --g-cover: #c9a46e; --g-sound: #7aa5e8; --g-boards: #4fc58d; --g-motion: #ec8460; --g-light: #d784d1; --g-power: #e0bd57; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1412; --surface: #161d1a; --fg: #e6ebe7; --muted: #97a39c; --line: #27312c;
+  --accent: #d9a84e; --accent-2: #45c993; --chip: #1f2823; --card: #1b2521;
+  --g-cover: #c9a46e; --g-sound: #7aa5e8; --g-boards: #4fc58d; --g-motion: #ec8460; --g-light: #d784d1; --g-power: #e0bd57; color-scheme: dark }
+
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--body); }
+[hidden] { display: none !important; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 30px; }
+header { display: grid; gap: 8px; }
+.tag { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-2); font-weight: 600; }
+h1 { font: 600 clamp(26px, 4vw, 38px)/1.1 var(--display); margin: 0; text-wrap: balance; }
+h1 .ar { font-family: var(--arabic); color: var(--accent); margin-inline-start: 10px; }
+h2 { font: 600 22px/1.2 var(--display); margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); margin: 0; max-width: 70ch; }
+.specs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.specs span { font: 500 12.5px var(--mono); background: var(--chip); border: 1px solid var(--line); border-radius: 8px; padding: 5px 9px; }
+
+.studio { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 880px) { .studio { grid-template-columns: minmax(0, 1fr); } }
+.stagecol { display: grid; gap: 10px; min-width: 0; position: sticky; top: env(safe-area-inset-top, 0px); }
+@media (max-width: 880px) { .stagecol { position: static; } }
+.stage { position: relative; border-radius: 18px; overflow: hidden; aspect-ratio: 1 / 1.02; max-width: 100%;
+  background: radial-gradient(120% 90% at 50% 30%, #6a7270 0%, #525957 60%, #444a48 100%); touch-action: none; }
+.stage canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+.stage canvas:active { cursor: grabbing; }
+.hint { position: absolute; left: 14px; bottom: 12px; font: 500 12px var(--body); color: #e4e9e6; pointer-events: none; }
+.scale { position: absolute; right: 14px; bottom: 12px; font: 500 11px var(--mono); color: #e4e9e6; pointer-events: none; }
+.callouts { position: absolute; inset: 0; pointer-events: none; }
+.callouts button { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; width: 22px; height: 22px; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,.85); color: #fff; font: 600 10.5px var(--mono); display: grid; place-items: center; padding: 0;
+  cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.5); }
+.callouts button.on { outline: 2px solid #fff; outline-offset: 2px; }
+.callouts button:focus-visible { outline: 2px solid #f3cf86; outline-offset: 2px; }
+.viewbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 18px; min-width: 0; }
+.label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.group { display: grid; gap: 9px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button, .chipbtn { font: 600 13px var(--body); color: var(--fg); background: var(--chip); border: 1px solid var(--line);
+  border-radius: 999px; padding: 7px 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chipbtn i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.chipbtn[aria-pressed="false"] { opacity: .5; }
+.chipbtn[aria-pressed="false"] i { background: transparent !important; box-shadow: inset 0 0 0 1.5px var(--muted); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; text-align: start;
+  font: 500 14px var(--body); color: var(--fg); background: none; border: 0; padding: 4px 0; cursor: pointer; }
+.toggle::after { content: ""; flex: none; width: 42px; height: 25px; border-radius: 13px; background: var(--line);
+  box-shadow: inset 0 0 0 1px var(--line); transition: background .2s; background-image: radial-gradient(circle at 12.5px 50%, #fff 9px, transparent 9.5px); }
+.toggle[aria-pressed="true"]::after { background-color: var(--accent-2); background-image: radial-gradient(circle at 29.5px 50%, #fff 9px, transparent 9.5px); }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 15px; display: grid; gap: 8px; }
+.card .who { display: flex; align-items: center; gap: 9px; }
+.card .num { flex: none; width: 24px; height: 24px; border-radius: 50%; color: #fff; display: grid; place-items: center; font: 600 11px var(--mono); }
+.card h3 { margin: 0; font: 600 17px/1.25 var(--body); }
+.card p { margin: 0; color: var(--muted); }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; font-size: 13.5px; margin: 2px 0 0; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; }
+
+section { display: grid; gap: 14px; min-width: 0; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13.5px; }
+th, td { text-align: start; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--chip); }
+#bom tbody tr { cursor: pointer; }
+#bom tbody tr:hover, #bom tbody tr.on { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+td.n { font: 600 12px var(--mono); white-space: nowrap; }
+td.n i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-inline-end: 7px; }
+td.mono { font: 12.5px var(--mono); color: var(--muted); }
+tr.grouprow td { background: var(--bg); font-size: 12px; letter-spacing: .07em; text-transform: uppercase; font-weight: 600; color: var(--muted); cursor: default; }
+tfoot td { font-weight: 600; }
+.num-r { text-align: end; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 12.5px; }
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 18px; }
+.prose p { margin: 0; max-width: 68ch; }
+.prose { display: grid; gap: 10px; }
+.prose b { color: var(--fg); }
+ol.qs { margin: 0; padding-inline-start: 22px; display: grid; gap: 10px; max-width: 78ch; }
+ol.qs li::marker { color: var(--accent); font-weight: 700; }
+.diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; overflow-x: auto; }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+td.shape { width: 92px; padding: 6px 8px; }
+td.shape img, .thumbs img { display: block; width: 84px; height: 63px; object-fit: contain; border-radius: 8px; background: #525957; }
+.card .pic { width: 100%; max-width: 260px; aspect-ratio: 4 / 3; object-fit: contain; border-radius: 10px; background: #525957; }
+.thumbs { display: flex; flex-wrap: wrap; gap: 6px; }
+.stepbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.stepbar span { flex: 1 1 150px; min-width: 0; font: 600 13.5px var(--body); }
+.stepbar button:disabled { opacity: .4; cursor: default; }
+.card ol { margin: 0; padding-inline-start: 20px; display: grid; gap: 4px; font-size: 14px; }
+ol.guide { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+ol.guide > li { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 14px; align-items: start; }
+ol.guide > li > div { display: grid; gap: 6px; min-width: 0; }
+ol.guide .stepno { font: 600 12px var(--mono); color: var(--accent); letter-spacing: .06em; }
+ol.guide h3 { margin: 0; font: 600 16px var(--body); }
+ol.guide ol { margin: 0; padding-inline-start: 20px; display: grid; gap: 3px; font-size: 14px; }
+ol.guide .meta { margin: 0; font-size: 13px; color: var(--muted); }
+ol.guide .meta b { color: var(--fg); font-weight: 600; }
+@media (max-width: 560px) { ol.guide > li { grid-template-columns: minmax(0, 1fr); } }
+.figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 16px; }
+figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 8px; min-width: 0; }
+figcaption { font-size: 13px; color: var(--muted); }
+h3.sub3 { margin: 6px 0 0; font: 600 17px var(--body); }
+.xs { width: 100%; height: auto; display: block; }
+.xs .shell { fill: color-mix(in srgb, #8fbcd4 55%, transparent); stroke: var(--fg); stroke-width: 1; }
+.xs .fab { fill: none; stroke: var(--g-cover); stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
+.xs .cord { fill: var(--fg); }
+.xs .lead { stroke: var(--muted); stroke-width: 1; fill: none; }
+.xs .frame { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.xs text { fill: var(--fg); font: 13px var(--body); }
+.xs .dim { fill: var(--muted); font: 11.5px var(--mono); letter-spacing: .05em; }
+.xs .sheet { fill: color-mix(in srgb, #8fbcd4 45%, var(--surface)); stroke: var(--muted); }
+.xs .hole { fill: var(--bg); stroke: var(--muted); stroke-width: .8; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="tag">Hardware study · model K1-P · Plain</div>
+    <h1>Kiitab speaker hardware<span class="ar" lang="ar">كتاب</span></h1>
+    <p class="sub">What goes inside the simplest Kiitab: no screen, the same fabric body, wooden top and turning base as Classic. Open it up to see the speakers, the boards, the two motors and how power reaches a speaker that turns. The parts named are suggestions for the hardware engineer to confirm.</p>
+    <div class="specs">
+      <span>Body 160 × 160 × 192 mm</span><span>Base 160 × 160 × 13 mm</span><span>About 1.6 kg</span>
+      <span>65 W USB-C power</span><span>Wi-Fi + Bluetooth</span><span>5 speakers · 2 motors · 4 boards</span><span>About 76 screws</span>
+    </div>
+  </header>
+
+  <div class="studio">
+    <div class="stagecol">
+      <div class="stage" id="stage">
+        <canvas id="view" aria-label="3D model of the Kiitab speaker's inside. Drag to turn it; click a part to read about it."></canvas>
+        <div class="callouts" id="callouts"></div>
+        <div class="hint">Drag to turn · wheel to zoom · click a part</div>
+        <div class="scale" id="scale">grid squares 20 mm</div>
+      </div>
+      <div class="viewbar seg" id="views"></div>
+    </div>
+
+    <div class="panel">
+      <div class="group">
+        <div class="label">Pull it apart</div>
+        <input type="range" id="explode" min="0" max="100" value="0" aria-label="How far apart the parts are">
+      </div>
+      <div class="group">
+        <div class="label">Show</div>
+        <div class="seg" id="groups"></div>
+      </div>
+      <div class="group">
+        <div class="label">Run it</div>
+        <button class="toggle" id="turnBody" aria-pressed="false">Bottom motor: turn the speaker</button>
+        <button class="toggle" id="turnSeat" aria-pressed="false">Top motor: turn the add-on seat</button>
+        <button class="toggle" id="dome" aria-pressed="false">Put a dome add-on on top</button>
+        <button class="toggle" id="lights" aria-pressed="true">Lights on</button>
+        <button class="toggle" id="fabric" aria-pressed="true">Fabric on the skins</button>
+        <button class="toggle" id="nums" aria-pressed="true">Part numbers</button>
+      </div>
+      <div class="group">
+        <div class="label">Build it step by step</div>
+        <div class="stepbar seg">
+          <button id="stPrev" type="button">Back</button>
+          <span id="stLabel">Not started</span>
+          <button id="stNext" type="button">Start</button>
+          <button id="stStop" type="button" hidden>Show all</button>
+        </div>
+      </div>
+      <div class="card" id="info" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <section>
+    <h2>Parts list</h2>
+    <p class="note">Click a row to find the part in the model. Sizes are in millimetres; power is typical / highest.</p>
+    <div class="tablewrap"><table id="bom"><thead><tr><th>#</th><th>Shape</th><th>Part</th><th>What it does</th><th>Suggested part</th><th>Size</th><th>Count</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Screws and fixings</h2>
+    <p class="note">For one speaker. Count them again on the first prototype.</p>
+    <div class="tablewrap"><table style="min-width:600px"><thead><tr><th>Fixing</th><th class="num-r">Count</th><th>Where</th></tr></thead><tbody id="fix"></tbody></table></div>
+    <p class="note">Tools: PH0 and PH1 screwdrivers, hex keys 1.5, 2 and 2.5 mm, a 5 mm spanner for the standoffs, a soldering iron with an insert tip, side cutters, a multimeter and a cord roller (the kind used for insect screens).</p>
+  </section>
+
+  <section>
+    <h2>Assembly, step by step</h2>
+    <p class="note">Build from the base up. Each step adds its parts to the model above; "Show in 3D" jumps there. Steps 13 and 14 build the top section on the bench before it goes on in step 15.</p>
+    <ol class="guide" id="guide"></ol>
+  </section>
+
+  <section>
+    <h2>The skins: clear plastic with small holes, and the fabric on it</h2>
+    <div class="cols">
+      <div class="prose">
+        <p>Each of the three covers (top section, sleeve and bottom section) is a <b>thin glossy shell of clear polycarbonate</b>, 1.2 mm thick and full of small holes. The holes let the sound out and the clear plastic lets the light net shine through. The fabric is stretched over the shell, so from outside you see only fabric, while the shell keeps the shape crisp and the corners round.</p>
+        <p><b>The holes.</b> 1.0 mm round holes on a 1.8 mm staggered grid, about 28% open, enough for the sound to pass without changing it. The sleeve has holes all over, so the fabric looks the same everywhere; the top and bottom sections have holes only where sound or air must pass. Switch off "Fabric on the skins" beside the model to see them.</p>
+        <p><b>How the fabric is held.</b> Every edge of a shell turns inwards into a narrow lip with a groove all the way round. The fabric is pulled over the shell, wrapped round the edge and pressed into the groove with a soft rubber cord, the way an insect screen is fixed into a window. The cord holds it tight and even with no glue on the holes, and it pulls out to wash or change the fabric. Where two skins meet, the two folded edges leave a thin shadow line, so the seam looks deliberate.</p>
+      </div>
+      <div class="prose">
+        <p><b>How the skins come off.</b> The top section is held by four magnets and two locating pins. It carries the top board, which connects through spring pins, so no cable needs unplugging. Lift it off and the sleeve slides up and away. The bottom section is held by two screws underneath, so a child cannot pull the whole cover off.</p>
+        <p><b>Child safety.</b> Every magnet sits in a closed pocket, glued and covered, so it can never come loose: small strong magnets are dangerous if swallowed.</p>
+        <p><b>The fabric.</b> A tube sewn with its seam on a back corner, cut 2 to 3% smaller than the shell so it stretches tight. Linen, cotton or canvas chosen so sound and light pass through: hold it up to a lamp and you should see the light clearly. For the factory, a snap-in plastic clip ring can replace the rubber cord; it is faster to fit but harder to change at home.</p>
+      </div>
+    </div>
+    <div class="figs">
+      <figure>
+        <svg class="xs" viewBox="0 0 640 330" role="img" aria-label="Cross-section where the top section meets the sleeve: the fabric wraps round each shell's inward lip into a groove and a rubber cord locks it.">
+          <text x="20" y="24" class="dim">OUTSIDE</text>
+          <text x="604" y="24" class="dim" text-anchor="end">INSIDE</text>
+          <line x1="612" y1="34" x2="612" y2="296" class="frame"/>
+          <text x="604" y="316" class="dim" text-anchor="end">light net</text>
+          <text x="216" y="48" class="dim">TOP SECTION</text>
+          <text x="216" y="276" class="dim">SLEEVE</text>
+          <path class="shell" d="M200 30 H208 V140 H236 V118 H274 V150 H262 V124 H248 V150 H200 Z"/>
+          <path class="shell" d="M200 286 H208 V176 H236 V198 H274 V166 H262 V192 H248 V166 H200 Z"/>
+          <path class="fab" d="M196 30 V150 Q196 156 202 156 H250 V130 Q255 125 260 130 V150"/>
+          <path class="fab" d="M196 286 V166 Q196 160 202 160 H250 V186 Q255 191 260 186 V166"/>
+          <circle class="cord" cx="255" cy="141" r="4.5"/>
+          <circle class="cord" cx="255" cy="175" r="4.5"/>
+          <path class="lead" d="M206 76 H330"/><text x="336" y="80">Clear polycarbonate skin, 1.2 mm, glossy</text>
+          <path class="lead" d="M194 104 H150"/><text x="144" y="108" text-anchor="end">Fabric, stretched</text>
+          <path class="lead" d="M274 120 L330 112"/><text x="336" y="116">Inward lip with a groove all round</text>
+          <path class="lead" d="M260 141 L330 150"/><text x="336" y="154">Rubber cord locks the fabric in</text>
+          <path class="lead" d="M198 158 H150"/><text x="144" y="162" text-anchor="end">Thin shadow line</text>
+          <path class="lead" d="M260 175 L330 196"/><text x="336" y="200">The sleeve's edge, the same upside down</text>
+          <text x="20" y="316" class="dim">DRAWN ABOUT 7 × REAL SIZE</text>
+        </svg>
+        <figcaption>Where the top section meets the sleeve. The bottom section meets the sleeve the same way, and the top section's upper edge tucks under the wooden top.</figcaption>
+      </figure>
+      <figure>
+        <svg class="xs" viewBox="0 0 340 220" role="img" aria-label="Hole pattern: 1.0 mm holes on a 1.8 mm staggered grid, about 28 percent open.">
+          <defs><pattern id="holes" width="18" height="31.18" patternUnits="userSpaceOnUse">
+            <circle cx="9" cy="7.8" r="5" class="hole"/><circle cx="0" cy="23.38" r="5" class="hole"/><circle cx="18" cy="23.38" r="5" class="hole"/>
+          </pattern></defs>
+          <rect x="20" y="24" width="190" height="176" rx="10" class="sheet"/>
+          <rect x="20" y="24" width="190" height="176" rx="10" fill="url(#holes)"/>
+          <path class="lead" d="M27 16 H45 M27 12 V20 M45 12 V20"/><text x="54" y="20" class="dim">1.8 mm</text>
+          <text x="226" y="52">Holes 1.0 mm</text>
+          <text x="226" y="76">Grid 1.8 mm,</text>
+          <text x="226" y="94">staggered</text>
+          <text x="226" y="118">About 28% open</text>
+          <text x="226" y="142">Shell 1.2 mm</text>
+          <text x="226" y="160">clear PC</text>
+          <text x="226" y="196" class="dim">10 × REAL SIZE</text>
+        </svg>
+        <figcaption>The hole pattern, the same on every skin. Smaller holes look finer under thin fabric but let less sound through; this is a good middle.</figcaption>
+      </figure>
+    </div>
+    <h3 class="sub3">How the small holes are made</h3>
+    <div class="tablewrap"><table style="min-width:640px"><thead><tr><th>Stage</th><th>How</th><th>Cost and time</th><th>Good to know</th></tr></thead><tbody>
+      <tr><td><b>First prototypes</b><br>1 to 20</td><td>Print the shell in clear resin (SLA) with the holes drawn in the 3D model, then polish the outside.</td><td>A few days; about 40 to 80 dollars a shell</td><td>The quickest way to try hole sizes and the fabric fit.</td></tr>
+      <tr><td><b>Small batches</b><br>100 to 1,000</td><td>Mould the shell without holes, then drill the holes with a laser while a turntable turns the shell.</td><td>1 to 2 minutes a shell on the laser</td><td>The pattern can change without a new mould. The laser leaves a tiny raised rim that a light wipe removes.</td></tr>
+      <tr><td><b>Lowest cost</b><br>sleeve only</td><td>Buy flat micro-perforated polycarbonate sheet, heat-bend the four rounded corners on a jig and weld the seam at a back corner (ultrasonic welding).</td><td>Cheapest shells, simple tooling</td><td>Works only for the sleeve, which is a straight tube; the top and bottom sections still need moulding.</td></tr>
+      <tr><td><b>Mass production</b><br>5,000 and up</td><td>Holes moulded in: the steel mould has a pin for every hole, with side actions for the four sides.</td><td>Expensive mould; each shell is cheap and fast</td><td>The cleanest, glossiest holes, but the pattern is fixed once the mould is made.</td></tr>
+    </tbody></table></div>
+    <p class="note">My suggestion: laser-drilled moulded shells until the design settles, then a mould with the holes in it.</p>
+  </section>
+
+  <section class="cols">
+    <div class="prose">
+      <h2>How a speaker that turns gets its power</h2>
+      <p>The wooden base stays still and the whole body turns on a <b>ring bearing</b>. The <b>bottom motor</b> sits inside the body, in one corner, and its small gear walks round a <b>fixed gear ring</b> on the base, carrying the speaker with it. A full turn takes about a minute and is nearly silent, because the motor driver runs it in its quiet mode.</p>
+      <p>Because the body turns, no wire can go from the base to the body. Instead two <b>copper power rings</b> on the base carry 20 V, and two gold <b>spring contacts</b> under the body ride on them, like a cordless kettle on its stand. The base needs no board at all: just the USB-C socket, the power switch, the rings and a small magnet. A <b>home sensor</b> in the body feels that magnet, so the speaker always knows where the front is and can turn to face you.</p>
+      <p>All the data stays inside the body. The remote and the app talk to the main board by Bluetooth and Wi-Fi, which work from any side.</p>
+    </div>
+    <div class="prose">
+      <h2>The top, and the top motor</h2>
+      <p>Under the wooden top is the <b>top board</b>: four microphones at the corners (they hear the name from any side), the voice chip that removes the speaker's own sound from what the microphones hear, the touch pads under the 3 mm wood, and the 24 lights of the ring.</p>
+      <p>The <b>top motor</b> turns the <b>add-on seat</b> in the middle of the top. Magnets hold an add-on in place and two small contact rings power its lights while it turns, so a dome, minarets or the Kaaba's mataf can turn slowly while it recites, or stay still. This is my reading of "top motor"; see question 1 below.</p>
+      <p><b>The same bottom half fits every shape.</b> Base, turning plate, bottom motor, power board and bass speaker are shared by Classic, Mihrab, Front screen and Small display. Only the top half and the screen change.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Power and data</h2>
+    <div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  A["USB-C adapter 65 W"] --> B["Base: USB-C socket, power switch"]
+  B --> C["Power rings and spring contacts"]
+  C --> D["Power and motor board"]
+  D -- "20 V" --> E["Amplifier board"]
+  D -- "5 V" --> F["Main board"]
+  D -- "5 V" --> G["Light net"]
+  D --> H["Bottom motor"]
+  D --> I["Top motor"]
+  I --> N["Add-on seat"]
+  F <-- "USB audio, I2C" --> J["Top board: mics, touch, ring"]
+  F -- "I2S audio" --> E
+  E --> K["4 side speakers"]
+  E --> L["Bass speaker"]
+  F -- "LED data" --> G
+  F <-- "Wi-Fi, Bluetooth" --> M["Phone app and remote"]
+</pre>
+    </div>
+  </section>
+
+  <section>
+    <h2>Power budget</h2>
+    <div class="tablewrap"><table style="min-width:520px"><thead><tr><th>Part</th><th class="num-r">Typical (W)</th><th class="num-r">Highest (W)</th><th>Note</th></tr></thead>
+      <tbody id="power"></tbody>
+      <tfoot><tr><td>Total</td><td class="num-r" id="pTyp"></td><td class="num-r" id="pMax"></td><td>A 65 W USB-C adapter (20 V, 3.25 A) leaves room to spare.</td></tr></tfoot>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Questions for the owner</h2>
+    <ol class="qs">
+      <li><b>Top motor.</b> I have it turning the add-on seat (a dome or the Kaaba's mataf turning slowly). Did you mean something else, such as opening a lid, tilting the top or lifting an add-on?</li>
+      <li><b>Battery.</b> This design runs from the wall only. A battery for carrying it room to room would sit in the bottom half, add about 250 g, and needs a charging circuit.</li>
+      <li><b>The grille under the base.</b> The design mockup shows a speaker grille under the base. With a turning body and a 13 mm base, the bass speaker fits better in the body, firing down so its sound comes out of the gap around the base. The underside then has only feet, the switch and the label.</li>
+      <li><b>Where the brain runs.</b> A Linux module on the main board runs the Kiitab brain on the speaker and keeps recitations for offline use (about 60 to 90 dollars). A much cheaper chip (about 5 dollars) could only pass sound to the phone or the internet, so the speaker would need the phone or the internet for everything.</li>
+      <li><b>Microphone switch.</b> Should there be a hardware switch at the back that cuts power to the microphones, with a small red light, for families who want to be sure it is not listening?</li>
+    </ol>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const MM = 160;                     // millimetres per model unit: the body is 1 x 1.2 x 1 units
+  const W = 1.0, H = 1.2, D = 1.0, R = 0.22, baseY = -H / 2 - 0.045;
+
+  const GROUPS = [
+    ["cover", "Casing and wood"], ["sound", "Sound"], ["boards", "Boards"], ["motion", "Motors and turning"],
+    ["light", "Lights"], ["power", "Power"],
+  ];
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const gcol = g => css("--g-" + g);
+  const state = { e: 0, eT: 0, casing: 1, casingT: 1, show: Object.fromEntries(GROUPS.map(g => [g[0], true])),
+    turnBody: false, turnSeat: false, dome: false, lights: true, nums: true, sel: null, view: "whole",
+    fabric: true, fab: 1, step: -1, stepT: 1 };
+
+  // ---------- Parts: what each one is, for the card and the parts list ----------
+  const PARTS = [
+    { id: "topsec", g: "cover", name: "Top section", what: "A glossy clear plastic skin with small holes, covered in fabric. It holds the wooden top and the top board, and lifts off (4 magnets) to change the cover.", sug: "1.2 mm clear polycarbonate; fabric locked in its edge groove", size: "160 × 160 × 29", n: 1 },
+    { id: "sleeve", g: "cover", name: "Cover sleeve", what: "A clear plastic tube full of small holes, with linen, cotton or canvas stretched over it. It slides off once the top section is off, so a family can change the look.", sug: "1.2 mm clear polycarbonate, 1.0 mm holes on a 1.8 mm grid", size: "160 × 160 × 139", n: 1 },
+    { id: "botsec", g: "cover", name: "Bottom section", what: "The lowest skin. It hides the turning plate, the bottom motor and the boards, and is held by two screws underneath so a child cannot pull the cover off.", sug: "1.2 mm clear polycarbonate; fabric locked in its edge groove", size: "160 × 160 × 24", n: 1 },
+    { id: "plate", g: "cover", name: "Wooden top and light ring", what: "Thin wood over the touch pads, so a finger on the wood is felt. A light pipe carries the ring's light to the surface.", sug: "3 mm walnut, oak or ebony veneer; clear light pipe", size: "100 × 100 × 3", n: 1 },
+    { id: "seat", g: "motion", name: "Add-on seat", what: "The round seat in the middle of the top. Magnets hold an add-on; two small contact rings power its lights, even while it turns.", sug: "Brass ring, 4 × N52 magnets 6 × 2 mm", size: "Ø 24", n: 1 },
+    { id: "topboard", g: "boards", name: "Top board", what: "Four microphones that hear the name from any side, the voice chip that removes the speaker's own sound, the touch pads and the 24 ring lights.", sug: "XMOS XVF3800 voice chip, 4 × MEMS mic, 24 × SK6812 mini", size: "90 × 90 × 1.6", n: 1, pw: [0.6, 1.8] },
+    { id: "topmotor", g: "motion", name: "Top motor", what: "A tiny geared motor under the top board. It turns the add-on seat slowly, about 2 turns a minute, and its encoder knows where the seat is.", sug: "N20 gear motor 6 V, 1:298, with encoder", size: "12 × 10 × 34", n: 1, pw: [0.3, 0.8] },
+    { id: "main", g: "boards", name: "Main board (the brain)", what: "Runs the Kiitab brain: listening, answers, reciting, the topics. Keeps recitations already played for offline use. Wi-Fi for the app and the internet, Bluetooth for the remote.", sug: "Linux module like Raspberry Pi CM5 (4 GB, 32 GB) on our own board", size: "100 × 68 × 1.6", n: 1, pw: [4, 8] },
+    { id: "antenna", g: "boards", name: "Wi-Fi and Bluetooth antenna", what: "A flexible antenna high on the side, away from the speaker magnets and the metal plate, so it reaches the phone from any direction.", sug: "Flex PCB antenna 2.4 / 5 GHz", size: "40 × 10", n: 1 },
+    { id: "box", g: "sound", name: "Sound box", what: "A sealed box that gives the speakers their bass. It is also the spine: the top and bottom plates screw onto it.", sug: "Glass-filled ABS, 3 mm walls, damping foam inside", size: "128 × 128 × 118", n: 1 },
+    { id: "mids", g: "sound", name: "Side speakers", what: "One on each side, so the voice is clear all round the room, whichever way the speaker faces.", sug: "63 mm full-range, 8 Ω, 10 W", size: "Ø 63 × 32", n: 4, pw: [2, 16] },
+    { id: "woofer", g: "sound", name: "Bass speaker", what: "Fires down; its sound comes out of the gap above the base, all round. It gives the recitation its depth.", sug: "100 mm long-throw woofer, 4 Ω, 30 W", size: "Ø 100 × 48", n: 1, pw: [2, 20] },
+    { id: "net", g: "light", name: "Light net", what: "Colour lights on thin strips with gaps between them, behind the fabric. They make the flowers, mandala and ribbons; the gaps let the sound through.", sug: "About 320 × WS2812B-2020 on 16 flex strips", size: "Wraps 140 × 130", n: 1, pw: [4, 12] },
+    { id: "amp", g: "boards", name: "Amplifier board", what: "Turns the brain's sound into power for the speakers: the four side speakers in two pairs, and the bass speaker.", sug: "TI TAS5825M (2.1 channels, digital input)", size: "36 × 32", n: 1, pw: [1, 4] },
+    { id: "pwr", g: "power", name: "Power and motor board", what: "Takes 20 V from the spring contacts, makes 5 V and 3.3 V, and drives both motors quietly.", sug: "USB-PD sink, 5 V 6 A and 3.3 V regulators, TMC2209 motor driver", size: "36 × 32", n: 1, pw: [1, 2.5] },
+    { id: "motor", g: "motion", name: "Bottom motor", what: "Turns the whole speaker. Its small gear walks round the fixed gear ring on the base. Quiet mode makes it nearly silent.", sug: "NEMA 14 pancake stepper, 12-tooth gear", size: "35 × 35 × 20", n: 1, pw: [1.5, 3] },
+    { id: "hall", g: "motion", name: "Home sensor", what: "Feels the magnet in the base, so the speaker always knows where its front is and can turn to face you.", sug: "Hall sensor DRV5032", size: "10 × 8", n: 1 },
+    { id: "deck", g: "motion", name: "Turning plate", what: "The aluminium floor of the body. The bearing, the spring contacts, the motor and the boards are fixed to it; the bass sound goes through its middle.", sug: "2 mm aluminium, grille in the middle", size: "138 × 138 × 2", n: 1 },
+    { id: "brushes", g: "power", name: "Spring contacts", what: "Two gold-plated springs under the body that ride on the power rings, carrying power into a body that turns.", sug: "Gold-plated spring contacts, 3 A", size: "8 × 4", n: 2 },
+    { id: "bearing", g: "motion", name: "Ring bearing", what: "Carries the body's weight and lets it turn smoothly on the base.", sug: "Thin ring bearing (slewing ring), 115 mm", size: "Ø 115 × 6", n: 1 },
+    { id: "gear", g: "motion", name: "Fixed gear ring", what: "A gear ring fixed to the base. The bottom motor's gear walks round it.", sug: "Acetal gear ring, about 160 teeth", size: "Ø 139", n: 1 },
+    { id: "rings", g: "power", name: "Power rings", what: "Two copper rings on top of the base carrying 20 V, like a cordless kettle's stand.", sug: "Copper tracks on a ring board", size: "Ø 51 and 64", n: 2 },
+    { id: "base", g: "power", name: "Wooden base", what: "Stays still. USB-C power socket at the back, power switch underneath, four rubber feet, the magnet for the home sensor and the INKABOTS 2027 mark.", sug: "Wood with an aluminium insert", size: "160 × 160 × 13", n: 1 },
+    { id: "wires", g: "power", name: "Wires", what: "Power from the power board up to the main board; sound from the amplifier to the speakers; the motors to the power board.", sug: "Silicone wire, JST connectors", size: "", n: 1 },
+    { id: "locks", g: "cover", name: "Fabric lock cords", what: "Soft rubber cords pressed into the groove inside each skin's edges. They hold the fabric tight and pull out to change it.", sug: "EPDM cord 3.2 mm, or snap-in plastic clip rings", size: "3.5 m in all", n: 6 },
+    { id: "pogo", g: "boards", name: "Top link (spring pins)", what: "The top section lifts off with the top board inside it, so the top board connects to the main board through 8 spring pins instead of a cable.", sug: "8-pin spring-loaded (pogo) connector and matching pads", size: "20 × 5 × 24", n: 1 },
+  ];
+  const STEPS = [
+    { t: "Prepare the wooden base", parts: ["base"], screws: "6 M3 brass inserts (no screws yet); 4 stick-on feet", tools: "Soldering iron with an insert tip", do: ["Press the six M3 brass inserts into the base for the bearing.", "Glue the home magnet into its pocket and cover it.", "Fit the USB-C socket at the back and the power switch underneath; their wires go up through the middle.", "Stick on the four rubber feet."], check: "The socket sits flush and the switch clicks." },
+    { t: "Fit the power rings", parts: ["rings"], screws: "3 × M2.5×6 self-tapping", tools: "PH1 screwdriver, soldering iron", do: ["Solder the wires from the socket and the switch to the ring board.", "Screw the ring board into the middle of the base, copper side up."], check: "Adapter in, switch on: 20 V across the two rings on a multimeter." },
+    { t: "Fit the fixed gear ring", parts: ["gear"], screws: "6 × M3×10 wood screws", tools: "PH1 screwdriver", do: ["Lay the gear ring on its step, teeth outwards.", "Screw it down in a star order so it stays flat."], check: "The ring does not rock and every tooth is clean." },
+    { t: "Fit the ring bearing", parts: ["bearing"], screws: "6 × M3×8 into the brass inserts", tools: "2 mm hex key", do: ["Line up the bearing's outer race with the six inserts.", "Tighten gently in a star order."], check: "The inner race turns freely by hand, with no rough spots." },
+    { t: "Turning plate, spring contacts and home sensor", parts: ["deck", "brushes", "hall"], screws: "6 × M3×6 countersunk (bearing); 4 × M2×5 (contacts and sensor)", tools: "2 mm hex key, PH0 screwdriver", do: ["Screw the two spring contacts and the home sensor board under the turning plate.", "Lower the plate onto the bearing so the springs land on the copper rings.", "Screw the plate to the bearing's inner race."], check: "Turn the plate by hand: the springs stay on their rings all the way round." },
+    { t: "Bottom motor", parts: ["motor"], screws: "4 × M3×6 from underneath", tools: "2.5 mm hex key", do: ["Press the 12-tooth gear onto the motor shaft.", "Put the motor in its corner with the gear down through the plate.", "Slide it towards the gear ring until the teeth just mesh, then tighten."], check: "A hair of play between the teeth and no grinding when turned by hand." },
+    { t: "Amplifier and power boards", parts: ["amp", "pwr"], screws: "8 × M2.5 standoffs 8 mm; 8 × M2.5×5", tools: "5 mm spanner, PH0 screwdriver", do: ["Screw four standoffs into each back corner of the plate.", "Fit the amplifier board back-left and the power board back-right."], check: "No board touches the plate, the motor or a leg." },
+    { t: "Bass speaker and sound box", parts: ["woofer", "box"], screws: "4 × M3×10 (bass speaker); 4 × M3×12 from under the plate (legs)", tools: "2 mm hex key, soldering iron", do: ["Screw the bass speaker into the bottom of the sound box on its foam gasket, facing down.", "Solder its wires and pass them out through the sealed grommet.", "Stand the box on its four legs and screw it from under the plate."], check: "Press the cone gently: it moves evenly and springs back slowly (the box is airtight)." },
+    { t: "Side speakers", parts: ["mids"], screws: "16 × M3×8 self-tapping for plastic", tools: "PH1 screwdriver", do: ["Put a foam gasket on each side opening.", "Screw in the four side speakers, terminals at the bottom.", "Wire front and back as one pair, left and right as the other."], check: "Every speaker sits flat with no gap round its gasket." },
+    { t: "Light net", parts: ["net"], screws: "None: the strips clip into slots", tools: "None", do: ["Clip the 16 strips into the frame slots round the sound box, lights facing out.", "Keep the gaps between strips in front of the speakers.", "Lead the one data cable up towards the main board."], check: "The light test lights every LED in turn." },
+    { t: "Main board, antenna and top link", parts: ["main", "antenna", "pogo"], screws: "4 × M2.5 standoffs 10 mm; 4 × M2.5×5", tools: "5 mm spanner, PH0 screwdriver", do: ["Screw the four standoffs into the top of the sound box.", "Fit the main board with its heat sink, then the spring-pin block on its corner.", "Stick the flex antenna high on the frame, away from metal."], check: "The spring pins stand straight and spring back." },
+    { t: "Wires", parts: ["wires"], screws: "8 cable ties", tools: "Side cutters", do: ["Power board to main board and to amplifier; amplifier to the five speakers; main board to the light net; both motors to the power board.", "Tie the wires to the frame so nothing touches a speaker cone or the motor gear."], check: "Covers off, power on: lights, sound from each speaker, one slow turn." },
+    { t: "Build the top section (on the bench)", parts: ["topmotor", "topboard", "seat"], screws: "2 × M1.6×4 (motor); 2 × M2×5 (bracket); 4 × M2×5 (top board); 1 × M2×3 set screw (seat)", tools: "1.5 mm hex key, PH0 screwdriver", do: ["Screw the top motor to its bracket, and the bracket under the top board.", "Screw the top board into the top section, microphones lined up with their holes.", "Push the seat onto the motor shaft through the top and lock it with the set screw."], check: "The seat turns smoothly and sits level." },
+    { t: "Wooden top", parts: ["plate"], screws: "None: bonded with thin adhesive film", tools: "A weight or clamp", do: ["Press the clear light pipe into the ring groove.", "Lay the adhesive film and press the wooden top in place; leave it under a weight for an hour."], check: "Touch each icon: every pad answers in the touch test." },
+    { t: "Skins and fabric", parts: ["botsec", "sleeve", "topsec", "locks"], screws: "2 × M3×8 under the bottom section; 6 lengths of rubber cord", tools: "Cord roller", do: ["Pull the fabric over each clear skin, wrap it round the edges and roll the cord into the groove all round.", "Fit the bottom section and screw it from underneath.", "Slide the sleeve down over the frame onto the bottom section's ledge.", "Put the top section on: the magnets pull it home and the spring pins connect the top board."], check: "Seams even all round, and the speaker says its greeting." },
+  ];
+  const FIX = [
+    ["M3×10 wood screw, pan head", 6, "Fixed gear ring to the base"], ["M3×8 machine screw, pan head", 6, "Bearing outer race to the base, into brass inserts"],
+    ["M3×6 countersunk screw", 6, "Bearing inner race to the turning plate"], ["M3×6 machine screw, pan head", 4, "Bottom motor to the turning plate"],
+    ["M3×10 machine screw", 4, "Bass speaker to the sound box"], ["M3×12 machine screw", 4, "Sound box legs to the turning plate"],
+    ["M3×8 self-tapping screw for plastic", 16, "Side speakers"], ["M3×8 machine screw", 2, "Bottom section to the turning plate"],
+    ["M2.5×5 machine screw", 12, "Main, amplifier and power boards"], ["M2.5×6 self-tapping screw", 3, "Power ring board to the base"],
+    ["M2×5 machine screw", 10, "Top board (4), spring contacts (2), home sensor (2), top motor bracket (2)"], ["M1.6×4 machine screw", 2, "Top motor to its bracket"],
+    ["M2×3 set screw", 1, "Add-on seat on the top motor shaft"], ["M2.5 brass standoff, 10 mm", 4, "Main board"],
+    ["M2.5 brass standoff, 8 mm", 8, "Amplifier and power boards"], ["M3 brass heat-set insert", 14, "Base (6), sound box legs (4), bass speaker (4)"],
+    ["Magnet 6 × 2 mm, N52, in a closed pocket", 8, "Top section (4), add-on seat (4)"], ["Magnet 10 × 3 mm, in a closed pocket", 1, "Home magnet in the base"],
+    ["Rubber cord 3.2 mm (EPDM)", "3.5 m", "Fabric lock in the six skin edges"], ["Foam gasket ring", 5, "Under each speaker"],
+    ["Rubber foot, stick-on", 4, "Under the base"], ["Cable tie", 8, "Wires to the frame"],
+  ];
+  PARTS.forEach((p, i) => p.no = i + 1);
+  const byId = Object.fromEntries(PARTS.map(p => [p.id, p]));
+  const POWER = [
+    ["Main board", 4, 8, "Highest while thinking and downloading"], ["Top board", 0.6, 1.8, "Ring at full brightness"],
+    ["Amplifier and speakers", 5, 36, "Typical is room volume; highest is short loud peaks"], ["Light net", 4, 12, "Limited by software to 12 W"],
+    ["Bottom motor", 1.5, 3, "Only while turning"], ["Top motor", 0.3, 0.8, "Only while the seat turns"], ["Power board losses", 1, 2.5, ""],
+  ];
+
+  // ---------- Scene ----------
+  const canvas = $("view");
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.localClippingEnabled = true;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 60);
+  scene.add(new THREE.HemisphereLight(0xe2ebff, 0x2a302c, 0.75));
+  const key = new THREE.DirectionalLight(0xfff4e6, 1.4); key.position.set(2.4, 3.2, 3); scene.add(key);
+  const rim = new THREE.DirectionalLight(0x9fc0ff, 0.8); rim.position.set(-3, 2, -2.5); scene.add(rim);
+  const under = new THREE.DirectionalLight(0xffffff, 0.45); under.position.set(0.6, -3, 1.2); scene.add(under);
+
+  // A faint 20 mm grid on the floor, like a workshop mat.
+  const grid = new THREE.GridHelper(20 * 20 / MM, 20, 0x8a9490, 0x6c7572);
+  grid.material.transparent = true; grid.material.opacity = 0.5; scene.add(grid);
+
+  const std = (c, rough = 0.55, metal = 0.1, extra = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: new THREE.Color(c).convertSRGBToLinear(), roughness: rough, metalness: metal }, extra));
+  const canvasTex = (w, h, draw) => {
+    const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h);
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t;
+  };
+  const MAT = {
+    pcb: std(0x1d4a33, 0.5, 0.1), chip: std(0x141615, 0.4, 0.3), gold: std(0xd0a85a, 0.3, 0.85), steel: std(0xa3abae, 0.35, 0.85),
+    alu: std(0xb9bfc0, 0.42, 0.75), dark: std(0x2b2f2e, 0.6, 0.2), rubber: std(0x121413, 0.95, 0), copper: std(0xc77b4a, 0.28, 0.9),
+    cone: std(0x1b1b1b, 0.85, 0), surround: std(0x262626, 0.9, 0), box: std(0x353b39, 0.6, 0.1, { transparent: true }),
+    coil: std(0x8a5a2b, 0.4, 0.6), cap: std(0x2a3b8c, 0.4, 0.3), white: std(0xdadad4, 0.5, 0), dome: std(0x2f8a57, 0.42, 0.05),
+    wireR: std(0xb53a2e, 0.6, 0), wireK: std(0x1b1b1b, 0.6, 0), wireB: std(0x2f5fb0, 0.6, 0),
+  };
+  const wood = canvasTex(512, 512, (g, w, h) => {
+    g.fillStyle = "#6b4a2f"; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 90; i++) {
+      g.strokeStyle = `rgba(${40 + Math.random() * 30},${25 + Math.random() * 15},${12},${0.15 + Math.random() * 0.25})`;
+      g.lineWidth = 1 + Math.random() * 3; g.beginPath();
+      const y0 = Math.random() * h; for (let x = 0; x <= w; x += 16) { const y = y0 + Math.sin(x / 70 + i) * 6; x ? g.lineTo(x, y) : g.moveTo(x, y); }
+      g.stroke();
+    }
+  });
+  const woodMat = new THREE.MeshStandardMaterial({ map: wood, roughness: 0.55 });
+  const fabric = canvasTex(512, 512, (g, w, h) => {
+    g.fillStyle = "#cfc6b4"; g.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 4) { g.fillStyle = y % 8 ? "rgba(0,0,0,.06)" : "rgba(255,255,255,.07)"; g.fillRect(0, y, w, 2); }
+    for (let x = 0; x < w; x += 4) { g.fillStyle = x % 8 ? "rgba(0,0,0,.05)" : "rgba(255,255,255,.05)"; g.fillRect(x, 0, 2, h); }
+  });
+  fabric.wrapS = fabric.wrapT = THREE.RepeatWrapping; fabric.repeat.set(3, 3);
+
+  // A box with every edge rounded: push each vertex of a finely divided box onto a rounded shell.
+  function roundedBox(w, h, d, r, seg = 24) {
+    const g = new THREE.BoxGeometry(w, h, d, seg, seg, seg), p = g.attributes.position, nrm = g.attributes.normal;
+    const ix = w / 2 - r, iy = h / 2 - r, iz = d / 2 - r, v = new THREE.Vector3(), c = new THREE.Vector3();
+    for (let i = 0; i < p.count; i++) {
+      v.fromBufferAttribute(p, i);
+      c.set(Math.max(-ix, Math.min(ix, v.x)), Math.max(-iy, Math.min(iy, v.y)), Math.max(-iz, Math.min(iz, v.z)));
+      const n = v.clone().sub(c); if (n.lengthSq() < 1e-9) n.set(0, 1, 0); n.normalize();
+      p.setXYZ(i, c.x + n.x * r, c.y + n.y * r, c.z + n.z * r); nrm.setXYZ(i, n.x, n.y, n.z);
+    }
+    return g;
+  }
+  // A flat rounded square (optionally with a round hole), t thick, lying flat with its bottom at y = 0.
+  function plateGeo(s, r, t, hole = 0) {
+    const a = s / 2, sh = new THREE.Shape();
+    sh.moveTo(-a + r, -a); sh.lineTo(a - r, -a); sh.quadraticCurveTo(a, -a, a, -a + r); sh.lineTo(a, a - r);
+    sh.quadraticCurveTo(a, a, a - r, a); sh.lineTo(-a + r, a); sh.quadraticCurveTo(-a, a, -a, a - r); sh.lineTo(-a, -a + r); sh.quadraticCurveTo(-a, -a, -a + r, -a);
+    if (hole) { const hp = new THREE.Path(); hp.absarc(0, 0, hole, 0, Math.PI * 2, true); sh.holes.push(hp); }
+    const g = new THREE.ExtrudeGeometry(sh, { depth: t, bevelEnabled: false, curveSegments: 20 }); g.rotateX(-Math.PI / 2); return g;
+  }
+  // An open rounded-square tube (the light net), u running round it.
+  function tubeGeo(a, r, y0, y1) {
+    const pts = [], cx = a - r;
+    [[cx, cx], [-cx, cx], [-cx, -cx], [cx, -cx]].forEach(([x, z], k) => {
+      for (let i = 0; i <= 12; i++) { const t = (k + i / 12) * Math.PI / 2; pts.push([x + r * Math.cos(t), z + r * Math.sin(t)]); }
+    });
+    pts.push(pts[0]);
+    const pos = [], uv = [], idx = [];
+    pts.forEach(([x, z], i) => { const u = i / (pts.length - 1); pos.push(x, y0, z, x, y1, z); uv.push(u, 0, u, 1); });
+    for (let i = 0; i < pts.length - 1; i++) { const j = i * 2; idx.push(j, j + 2, j + 1, j + 1, j + 2, j + 3); }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+    g.setIndex(idx); g.computeVertexNormals(); return g;
+  }
+  const mesh = (geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); return m; };
+  const box = (w, h, d, mat, x, y, z) => mesh(new THREE.BoxGeometry(w, h, d), mat, x, y, z);
+  const cyl = (r, h, mat, x, y, z, seg = 24) => mesh(new THREE.CylinderGeometry(r, r, h, seg), mat, x, y, z);
+  // A screw head with its hex socket, facing up unless turned over.
+  function screw(parent, x, y, z, r = 0.014, down = false) {
+    const g = new THREE.Group(); g.position.set(x, y, z); if (down) g.rotation.x = Math.PI;
+    g.add(cyl(r, 0.007, MAT.steel, 0, 0.0035, 0, 16)); g.add(cyl(r * 0.5, 0.002, MAT.chip, 0, 0.0075, 0, 6));
+    parent.add(g); return g;
+  }
+  const ringPts = (r, a0 = 0, n = 6) => Array.from({ length: n }, (_, k) => [Math.cos(a0 + k * Math.PI * 2 / n) * r, Math.sin(a0 + k * Math.PI * 2 / n) * r]);
+  const wire = (parent, pts, mat, rad = 0.003) => parent.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(...p))), 20, rad, 5), mat));
+
+  // A printed circuit board: green board with traces drawn on, chips added on top by the caller.
+  function pcbTex(seed) {
+    return canvasTex(256, 256, (g, w, h) => {
+      g.fillStyle = "#1d4a33"; g.fillRect(0, 0, w, h);
+      g.strokeStyle = "rgba(208,168,90,.45)"; g.lineWidth = 1.4;
+      let s = seed; const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+      for (let i = 0; i < 46; i++) {
+        let x = rnd() * w, y = rnd() * h; g.beginPath(); g.moveTo(x, y);
+        for (let k = 0; k < 3; k++) { if (k % 2) x += (rnd() - 0.5) * 120; else y += (rnd() - 0.5) * 120; g.lineTo(x, y); }
+        g.stroke(); g.fillStyle = "rgba(208,168,90,.7)"; g.beginPath(); g.arc(x, y, 2.2, 0, 7); g.fill();
+      }
+      g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = 2; g.strokeRect(6, 6, w - 12, h - 12);
+    });
+  }
+  function board(w, d, seed) {
+    const g = new THREE.Group();
+    const top = new THREE.MeshStandardMaterial({ map: pcbTex(seed), roughness: 0.5 });
+    g.add(mesh(new THREE.BoxGeometry(w, 0.01, d), [MAT.pcb, MAT.pcb, top, MAT.pcb, MAT.pcb, MAT.pcb]));
+    return g;
+  }
+
+  // A speaker driver facing +z: basket, cone, dust cap, rubber surround and the magnet behind.
+  function driver(dia) {
+    const g = new THREE.Group(), r = dia / 2;
+    const frame = mesh(new THREE.TorusGeometry(r * 0.96, r * 0.06, 8, 40), MAT.dark); g.add(frame);
+    g.add(mesh(new THREE.TorusGeometry(r * 0.84, r * 0.07, 8, 40), MAT.surround));
+    const cone = mesh(new THREE.ConeGeometry(r * 0.8, r * 0.45, 40, 1, true), MAT.cone); cone.rotation.x = -Math.PI / 2; cone.position.z = -r * 0.22;
+    cone.material = MAT.cone.clone(); cone.material.side = THREE.DoubleSide; g.add(cone);
+    const cap = mesh(new THREE.SphereGeometry(r * 0.24, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), MAT.dark); cap.rotation.x = Math.PI / 2; cap.position.z = -r * 0.36; g.add(cap);
+    const mag = cyl(r * 0.42, r * 0.38, MAT.steel, 0, 0, -r * 0.62); mag.rotation.x = Math.PI / 2; g.add(mag);
+    const mag2 = cyl(r * 0.44, r * 0.06, MAT.dark, 0, 0, -r * 0.42); mag2.rotation.x = Math.PI / 2; g.add(mag2);
+    for (let k = 0; k < 4; k++) { const a = Math.PI / 4 + k * Math.PI / 2, s = screw(g, Math.cos(a) * r * 0.96, Math.sin(a) * r * 0.96, r * 0.04, r * 0.08); s.rotation.x = Math.PI / 2; }
+    g.add(box(r * 0.12, r * 0.05, r * 0.16, MAT.gold, r * 0.3, -r * 0.5, -r * 0.6)); g.add(box(r * 0.12, r * 0.05, r * 0.16, MAT.gold, -r * 0.3, -r * 0.5, -r * 0.6));
+    return g;
+  }
+
+  // The world: a base that stays still, and a body that turns on it. Inside the body each part is its own group.
+  const baseG = new THREE.Group(); scene.add(baseG);
+  const body = new THREE.Group(); scene.add(body);
+  const P = {};    // part id -> { group, home position, explode offset }
+  function part(id, grp, parent, dy = 0, out = 0, anchor = [0, 0, 0]) {
+    grp.traverse(o => { if (o.isMesh) { o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone(); o.userData.part = id; } });
+    parent.add(grp);
+    P[id] = { grp, home: grp.position.clone(), dy, out, anchor: new THREE.Vector3(...anchor) };
+    return grp;
+  }
+
+  // ----- Casing: three sections of one rounded shell, cut by flat planes that move with each section. -----
+  const cutHi = 0.42, cutLo = -0.45;
+  const clip = { top: new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), sHi: new THREE.Plane(new THREE.Vector3(0, -1, 0), 0),
+    sLo: new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), bot: new THREE.Plane(new THREE.Vector3(0, -1, 0), 0) };
+  // Each skin is a thin glossy clear shell full of small holes, with the fabric stretched over it.
+  const casingMat = new THREE.MeshStandardMaterial({ map: fabric, color: 0xd8d0bf, roughness: 0.95, side: THREE.DoubleSide, transparent: true });
+  const holeTex = canvasTex(32, 32, (g, w, h) => { g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.fillStyle = "#000"; g.beginPath(); g.arc(w / 2, h / 2, 9, 0, 7); g.fill(); });
+  holeTex.encoding = THREE.LinearEncoding; holeTex.wrapS = holeTex.wrapT = THREE.RepeatWrapping; holeTex.repeat.set(40, 48);
+  const shellMat = new THREE.MeshStandardMaterial({ color: 0xe6f0f4, roughness: 0.08, metalness: 0, transparent: true, opacity: 0.6, alphaMap: holeTex, side: THREE.DoubleSide, depthWrite: false });
+  const shellGeo = roundedBox(W, H, D, R, 36), fabGeo = roundedBox(W + 0.012, H + 0.012, D + 0.012, R + 0.006, 36);
+  // The rubber cords that lock the fabric into the groove inside each skin's edges.
+  const lockMat = std(0x2b2f2e, 0.7, 0, { side: THREE.DoubleSide });
+  const LOCKS = { topsec: [[0.312, 0.12, H / 2 - 0.016], [0.488, 0.21, cutHi + 0.008]], sleeve: [[0.488, 0.21, cutHi - 0.008], [0.488, 0.21, cutLo + 0.008]],
+    botsec: [[0.488, 0.21, cutLo - 0.008], [0.36, 0.15, -H / 2 + 0.012]] };
+  [["topsec", [clip.top], 0.68], ["sleeve", [clip.sHi, clip.sLo], 0], ["botsec", [clip.bot], -0.24]].forEach(([id, planes, dy]) => {
+    const g = new THREE.Group(); g.add(new THREE.Mesh(shellGeo, shellMat), new THREE.Mesh(fabGeo, casingMat));
+    part(id, g, body, dy, 0, id === "topsec" ? [0.5, 0.52, 0] : id === "sleeve" ? [0.5, 0, 0.25] : [0.5, -0.52, 0]);
+    g.traverse(o => { if (o.isMesh) o.material.clippingPlanes = planes; });
+    LOCKS[id].forEach(([a, r, y]) => { const m = new THREE.Mesh(tubeGeo(a, r, y - 0.006, y + 0.006), lockMat); m.userData.part = "locks"; g.add(m); });
+  });
+  { const m = P.sleeve.grp.children[2]; P.locks = { grp: m, home: m.position.clone(), dy: 0, out: 0, anchor: new THREE.Vector3(0.488, cutLo + 0.008, 0.2) }; }
+
+  // ----- The top: wooden plate with the light ring, mic holes, the add-on seat. -----
+  const plateG = new THREE.Group();
+  plateG.add(mesh(plateGeo(0.62, 0.12, 0.018, 0.08), woodMat, 0, H / 2 - 0.004, 0));
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0x8fe3c1, toneMapped: false });
+  const ring = mesh(new THREE.TorusGeometry(0.105, 0.007, 10, 80), ringMat, 0, H / 2 + 0.016, 0); ring.rotation.x = Math.PI / 2; plateG.add(ring);
+  [[0.2, 0.2], [-0.2, 0.2], [0.2, -0.2], [-0.2, -0.2]].forEach(([x, z]) => {
+    const m = mesh(new THREE.CircleGeometry(0.009, 16), MAT.chip, x, H / 2 + 0.0145, z); m.rotation.x = -Math.PI / 2; plateG.add(m);
+  });
+  part("plate", plateG, body, 0.68, 0, [0.28, H / 2 + 0.02, 0.1]);
+
+  const seatG = new THREE.Group(); seatG.position.y = H / 2 + 0.002;
+  seatG.add(cyl(0.075, 0.016, MAT.gold, 0, 0, 0, 40));
+  seatG.add(mesh(new THREE.TorusGeometry(0.03, 0.004, 6, 32), MAT.copper, 0, 0.009, 0).rotateX(Math.PI / 2));
+  seatG.add(mesh(new THREE.TorusGeometry(0.05, 0.004, 6, 32), MAT.copper, 0, 0.009, 0).rotateX(Math.PI / 2));
+  for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; seatG.add(cyl(0.008, 0.004, MAT.steel, Math.cos(a) * 0.063, 0.009, Math.sin(a) * 0.063, 12)); }
+  seatG.add(cyl(0.006, 0.12, MAT.steel, 0, -0.06, 0, 10));   // the shaft down to the top motor
+  const domeG = new THREE.Group(); domeG.position.y = 0.01; seatG.add(domeG);
+  domeG.add(cyl(0.11, 0.035, std(0xece4d2, 0.6, 0), 0, 0.017, 0, 40));
+  domeG.add(mesh(new THREE.SphereGeometry(0.105, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), MAT.dome, 0, 0.035, 0));
+  domeG.add(cyl(0.004, 0.05, MAT.gold, 0, 0.16, 0, 8));
+  domeG.visible = false;
+  part("seat", seatG, body, 0.82, 0, [0.07, 0.01, 0.04]);
+
+  // ----- Top board: 4 mics at the corners, the voice chip, touch pads, 24 ring lights. -----
+  const topB = board(0.56, 0.56, 7); topB.position.y = 0.56;
+  [[0.2, 0.2], [-0.2, 0.2], [0.2, -0.2], [-0.2, -0.2]].forEach(([x, z]) => { topB.add(box(0.03, 0.012, 0.024, MAT.steel, x, 0.011, z)); });
+  topB.add(box(0.07, 0.01, 0.07, MAT.chip, -0.13, 0.01, 0.0));                  // voice chip
+  topB.add(box(0.05, 0.008, 0.03, MAT.chip, 0.13, 0.009, -0.03));
+  const ringLeds = [];
+  for (let k = 0; k < 24; k++) {
+    const a = k / 24 * Math.PI * 2, l = box(0.014, 0.008, 0.014, new THREE.MeshBasicMaterial({ color: 0x8fe3c1, toneMapped: false }), Math.cos(a) * 0.105, 0.009, Math.sin(a) * 0.105);
+    topB.add(l); ringLeds.push(l);
+  }
+  [[0, 0.22], [0.22, 0], [-0.22, 0], [0, -0.22]].forEach(([x, z]) => {     // touch pads: copper under the wood
+    const m = mesh(new THREE.CircleGeometry(0.035, 24), MAT.copper, x, 0.0055, z); m.rotation.x = -Math.PI / 2; topB.add(m);
+  });
+  topB.add(box(0.05, 0.004, 0.03, MAT.gold, 0.24, -0.007, 0.05));              // pads for the spring pins underneath
+  [[0.25, 0.25], [-0.25, 0.25], [0.25, -0.25], [-0.25, -0.25]].forEach(([x, z]) => screw(topB, x, 0.005, z, 0.012));
+  part("topboard", topB, body, 0.52, 0, [-0.13, 0.03, 0]);
+
+  // ----- Top motor: a tiny geared motor under the top board, turning the seat. -----
+  // An N20 gear motor standing upright: gearbox plates on top, the motor can, the encoder underneath, on a bracket.
+  const tm = new THREE.Group(); tm.position.y = 0.475;
+  for (let i = 0; i < 4; i++) tm.add(box(0.075, 0.0125, 0.0625, i % 2 ? MAT.gold : MAT.steel, 0, 0.006 + i * 0.0125, 0));
+  tm.add(cyl(0.0095, 0.035, MAT.steel, 0, 0.068, 0, 12));
+  tm.add(cyl(0.038, 0.085, MAT.steel, 0, -0.0425, 0, 24));
+  tm.add(cyl(0.03, 0.01, MAT.dark, 0, -0.09, 0, 20));
+  tm.add(cyl(0.022, 0.006, MAT.chip, 0, -0.098, 0, 20));
+  tm.add(board(0.07, 0.07, 3).translateY(-0.106));
+  [MAT.wireR, MAT.wireK, MAT.wireB, MAT.gold].forEach((m, i) => wire(tm, [[-0.02 + i * 0.013, -0.11, 0.03], [-0.02 + i * 0.013, -0.125, 0.08], [0.05, -0.09, 0.15]], m, 0.0025));
+  tm.add(box(0.012, 0.075, 0.08, MAT.alu, 0.044, 0.045, 0)); tm.add(box(0.07, 0.008, 0.08, MAT.alu, 0.075, 0.079, 0));
+  screw(tm, 0.085, 0.083, 0.025, 0.009); screw(tm, 0.085, 0.083, -0.025, 0.009);
+  part("topmotor", tm, body, 0.4, 0, [0.04, 0.05, 0.04]);
+
+  // ----- Main board, high in the body above the sound box. -----
+  const mb = board(0.62, 0.42, 11); mb.position.set(0, 0.392, -0.1);
+  mb.add(box(0.27, 0.014, 0.18, MAT.pcb, -0.06, 0.012, 0));                 // the compute module
+  mb.add(box(0.07, 0.01, 0.07, MAT.chip, -0.1, 0.024, 0));
+  for (let k = 0; k < 9; k++) mb.add(box(0.012, 0.045, 0.16, MAT.alu, -0.16 + k * 0.025, 0.042, 0));   // heat sink fins
+  mb.add(box(0.05, 0.012, 0.05, MAT.chip, 0.17, 0.011, 0.1));
+  mb.add(box(0.06, 0.02, 0.025, MAT.white, 0.2, 0.015, -0.15));
+  mb.add(box(0.06, 0.02, 0.025, MAT.white, 0.08, 0.015, -0.15));
+  [[0.28, 0.18], [-0.28, 0.18], [0.28, -0.18], [-0.28, -0.18]].forEach(([x, z]) => { screw(mb, x, 0.005, z, 0.012); mb.add(cyl(0.013, 0.05, MAT.gold, x, -0.03, z, 6)); });
+  part("main", mb, body, 0.26, 0, [-0.08, 0.07, 0.06]);
+  const pogo = new THREE.Group(); pogo.position.set(0.24, 0.392, 0.05);
+  pogo.add(box(0.05, 0.15, 0.03, MAT.chip, 0, 0.08, 0));
+  for (let k = 0; k < 8; k++) pogo.add(cyl(0.0028, 0.012, MAT.gold, -0.0175 + k * 0.005, 0.16, 0, 6));
+  part("pogo", pogo, body, 0.39, 0, [0, 0.12, 0.02]);
+  const ant = new THREE.Group(); ant.position.set(-0.43, 0.38, 0);
+  ant.add(box(0.004, 0.065, 0.25, std(0xb98a3c, 0.5, 0.3), 0, 0, 0));
+  part("antenna", ant, body, 0.26, 0.25, [0, 0.02, 0.05]);
+
+  // ----- Sound box with four side speakers and the bass speaker firing down. -----
+  const boxMesh = new THREE.Group();
+  boxMesh.add(mesh(roundedBox(0.8, 0.74, 0.8, 0.12, 16), MAT.box, 0, -0.03, 0));
+  const LEGS = [[0, 0.345], [0.345, 0], [0, -0.345], [-0.345, 0]];      // the box stands on four legs on the turning plate
+  LEGS.forEach(([x, z]) => boxMesh.add(cyl(0.022, 0.175, MAT.dark, x, -0.4875, z, 16)));
+  part("box", boxMesh, body, 0, 0, [0.4, 0.27, 0.15]);
+  const mids = new THREE.Group();
+  [[0, 0.401, 0], [Math.PI / 2, 0, 0.401], [Math.PI, -0.401, 0], [-Math.PI / 2, 0, -0.401]].forEach(([a]) => {
+    const d = driver(0.39), holder = new THREE.Group();
+    d.position.z = 0.408; holder.add(d); holder.rotation.y = a; holder.position.y = 0.06; mids.add(holder);
+  });
+  part("mids", mids, body, 0, 0.32, [0.11, 0.18, 0.42]);
+  const wf = new THREE.Group(); wf.position.y = -0.41;
+  const wd = driver(0.62); wd.rotation.x = Math.PI / 2; wf.add(wd);
+  part("woofer", wf, body, -0.14, 0, [0.2, -0.02, 0.2]);
+
+  // ----- Light net: strips of colour lights with gaps, behind the fabric. -----
+  const netTex = canvasTex(1024, 256, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    const strips = 64;
+    for (let s = 0; s < strips; s++) {
+      const x = (s + 0.5) * w / strips;
+      g.fillStyle = "rgba(40,48,44,.9)"; g.fillRect(x - 3, 0, 6, h);
+      for (let y = 8; y < h; y += 13) { g.fillStyle = `hsl(${(s * 360 / strips * 2 + y) % 360},90%,62%)`; g.fillRect(x - 3, y, 6, 6); }
+    }
+  });
+  netTex.wrapS = THREE.RepeatWrapping;
+  const netMat = new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, toneMapped: false, depthWrite: false });
+  const net = new THREE.Group(); net.add(new THREE.Mesh(tubeGeo(0.455, 0.18, -0.42, 0.34), netMat));
+  part("net", net, body, 0, 0, [0.455, 0.3, -0.2]);
+
+  // ----- The bottom: turning plate, bottom motor, boards in the corners, contacts, bearing. -----
+  const deckY = -0.575;
+  const deck = new THREE.Group(); deck.position.y = deckY;
+  deck.add(mesh(plateGeo(0.86, 0.17, 0.014, 0.3), MAT.alu));
+  for (let y = -0.27; y <= 0.27; y += 0.054) for (let x = -0.27; x <= 0.27; x += 0.054) {   // the grille in the middle
+    if (x * x + y * y < 0.27 * 0.27) deck.add(box(0.03, 0.004, 0.03, MAT.dark, x, 0.007, y));
+  }
+  LEGS.forEach(([x, z]) => screw(deck, x, 0, z, 0.014, true));                         // box legs, from underneath
+  ringPts(0.36, Math.PI / 8).forEach(([x, z]) => screw(deck, x, 0.014, z, 0.012));        // bearing inner race
+  [[-0.378, -0.378], [0.378, -0.378]].forEach(([x, z]) => screw(deck, x, 0, z, 0.014, true));   // bottom section
+  part("deck", deck, body, -0.26, 0, [-0.38, 0.01, 0]);
+  // A NEMA 14 pancake stepper: two aluminium end caps round a stack of steel laminations, its shaft pointing down.
+  const motor = new THREE.Group(); motor.position.set(0.33, deckY + 0.014, 0.33);
+  motor.add(mesh(plateGeo(0.22, 0.035, 0.025), MAT.alu));
+  for (let i = 0; i < 9; i++) motor.add(mesh(plateGeo(0.212, 0.03, 0.0075), i % 2 ? MAT.steel : MAT.dark, 0, 0.025 + i * 0.0075, 0));
+  motor.add(mesh(plateGeo(0.22, 0.035, 0.025), MAT.alu, 0, 0.0925, 0));
+  [[0.08, 0.08], [-0.08, 0.08], [0.08, -0.08], [-0.08, -0.08]].forEach(([x, z]) => {
+    const h = mesh(new THREE.CircleGeometry(0.009, 12), MAT.chip, x, 0.1178, z); h.rotation.x = -Math.PI / 2; motor.add(h);
+    screw(motor, x, -0.014, z, 0.013, true);                                            // from under the turning plate
+  });
+  motor.add(box(0.035, 0.03, 0.06, MAT.white, -0.125, 0.06, 0));
+  [MAT.wireR, MAT.wireB, MAT.wireK, MAT.gold].forEach((m, i) => wire(motor, [[-0.14, 0.05 + i * 0.006, -0.02 + i * 0.013], [-0.18, 0.08, -0.1], [-0.02, 0.03, -0.45]], m, 0.003));
+  motor.add(cyl(0.05, 0.01, MAT.alu, 0, -0.005, 0, 32));
+  motor.add(cyl(0.012, 0.07, MAT.steel, 0, -0.035, 0, 12));
+  const pinion = new THREE.Group(); pinion.position.y = -0.054; motor.add(pinion);
+  pinion.add(cyl(0.026, 0.024, MAT.white, 0, 0, 0, 24));
+  for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; const t = box(0.008, 0.024, 0.01, MAT.white, Math.cos(a) * 0.03, 0, Math.sin(a) * 0.03); t.rotation.y = -a; pinion.add(t); }
+  part("motor", motor, body, -0.3, 0.1, [0, 0.14, 0.05]);
+
+  function cornerBoard(id, x, z, seed, build, anchor) {
+    const b = board(0.22, 0.2, seed); b.position.set(x, deckY + 0.05, z);
+    [[0.09, 0.08], [-0.09, 0.08], [0.09, -0.08], [-0.09, -0.08]].forEach(([sx, sz]) => { screw(b, sx, 0.005, sz, 0.011); b.add(cyl(0.011, 0.036, MAT.gold, sx, -0.023, sz, 6)); });
+    build(b); part(id, b, body, -0.2, 0.12, anchor);
+  }
+  cornerBoard("amp", -0.32, -0.32, 21, b => {
+    b.add(box(0.05, 0.01, 0.05, MAT.chip, 0, 0.01, 0));
+    for (let k = 0; k < 5; k++) b.add(box(0.008, 0.04, 0.06, MAT.alu, -0.02 + k * 0.01, 0.03, 0));
+    b.add(cyl(0.016, 0.04, MAT.cap, 0.07, 0.025, 0.06)); b.add(cyl(0.016, 0.04, MAT.cap, 0.07, 0.025, -0.06));
+    b.add(box(0.03, 0.025, 0.03, MAT.coil, -0.07, 0.017, 0.06)); b.add(box(0.03, 0.025, 0.03, MAT.coil, -0.07, 0.017, -0.06));
+  }, [0, 0.06, 0]);
+  cornerBoard("pwr", 0.32, -0.32, 33, b => {
+    b.add(box(0.04, 0.03, 0.04, MAT.coil, -0.05, 0.02, 0.05)); b.add(box(0.04, 0.03, 0.04, MAT.coil, -0.05, 0.02, -0.04));
+    b.add(cyl(0.018, 0.045, MAT.cap, 0.05, 0.027, 0.05)); b.add(cyl(0.018, 0.045, MAT.cap, 0.06, 0.027, -0.03));
+    b.add(box(0.03, 0.008, 0.03, MAT.chip, 0.0, 0.009, 0)); b.add(box(0.025, 0.008, 0.025, MAT.chip, 0.0, 0.009, -0.065));
+    b.add(box(0.05, 0.018, 0.022, MAT.white, -0.07, 0.014, 0.085));
+  }, [0, 0.06, 0]);
+  const hall = new THREE.Group(); hall.position.set(-0.36, deckY - 0.008, 0.36);
+  hall.add(board(0.06, 0.05, 41)); hall.add(box(0.012, 0.008, 0.01, MAT.chip, 0, -0.008, 0));
+  screw(hall, 0.022, -0.005, 0, 0.007, true); screw(hall, -0.022, -0.005, 0, 0.007, true);
+  part("hall", hall, body, -0.34, 0.08, [0, 0, 0]);
+  const brushes = new THREE.Group(); brushes.position.y = deckY - 0.012;
+  [0.16, 0.2].forEach(r => { brushes.add(box(0.03, 0.012, 0.02, MAT.dark, -r, 0.0, 0)); brushes.add(box(0.012, 0.014, 0.01, MAT.gold, -r, -0.012, 0)); });
+  part("brushes", brushes, body, -0.34, 0, [-0.18, -0.01, 0]);
+
+  // ----- The base: still. Bearing, fixed gear ring, power rings, magnet, feet, socket, switch. -----
+  const bearing = new THREE.Group(); bearing.position.y = -0.6;
+  bearing.add(mesh(new THREE.TorusGeometry(0.36, 0.014, 10, 80), MAT.steel).rotateX(Math.PI / 2));
+  ringPts(0.33, Math.PI / 6).forEach(([x, z]) => screw(bearing, x, 0.0, z, 0.012));
+  part("bearing", bearing, baseG, -0.42, 0, [0.36, 0, 0]);
+  const gear = new THREE.Group(); gear.position.y = -0.603;
+  gear.add(mesh(new THREE.RingGeometry(0.385, 0.425, 96), std(0xe8e2d0, 0.5, 0, { side: THREE.DoubleSide })).rotateX(-Math.PI / 2));
+  gear.add(mesh(new THREE.CylinderGeometry(0.425, 0.425, 0.024, 96, 1, true), std(0xe8e2d0, 0.5, 0, { side: THREE.DoubleSide }), 0, -0.012, 0));
+  for (let k = 0; k < 120; k++) { const a = k / 120 * Math.PI * 2; const t = box(0.009, 0.024, 0.012, MAT.white, Math.cos(a) * 0.43, -0.012, Math.sin(a) * 0.43); t.rotation.y = -a; gear.add(t); }
+  ringPts(0.405).forEach(([x, z]) => screw(gear, x, 0.0005, z, 0.011));
+  part("gear", gear, baseG, -0.5, 0, [0.42, 0, -0.1]);
+  const rings = new THREE.Group(); rings.position.y = -0.6045;
+  rings.add(mesh(new THREE.RingGeometry(0.12, 0.235, 80), std(0x1d4a33, 0.5, 0.1, { side: THREE.DoubleSide })).rotateX(-Math.PI / 2));
+  [0.16, 0.2].forEach(r => rings.add(mesh(new THREE.RingGeometry(r - 0.012, r + 0.012, 80), MAT.copper, 0, 0.001, 0).rotateX(-Math.PI / 2)));
+  ringPts(0.13, Math.PI / 2, 3).forEach(([x, z]) => screw(rings, x, 0.001, z, 0.009));
+  part("rings", rings, baseG, -0.52, 0, [0.2, 0, 0]);
+  const baseGrp = new THREE.Group();
+  baseGrp.add(mesh(roundedBox(1.0, 0.08, 1.0, 0.035, 10), woodMat, 0, baseY, 0));
+  baseGrp.add(cyl(0.022, 0.006, MAT.steel, -0.36, baseY + 0.043, 0.36, 16));                  // home magnet
+  [[0.4, 0.4], [-0.4, 0.4], [0.4, -0.4], [-0.4, -0.4]].forEach(([x, z]) => baseGrp.add(cyl(0.045, 0.012, MAT.rubber, x, baseY - 0.045, z, 24)));
+  baseGrp.add(mesh(roundedBox(0.06, 0.022, 0.02, 0.009, 4), MAT.chip, 0.18, baseY, -0.501));     // USB-C socket
+  baseGrp.add(box(0.05, 0.01, 0.03, MAT.chip, 0.32, baseY - 0.041, -0.3));                      // power switch underneath
+  part("base", baseGrp, baseG, -0.62, 0, [0.5, baseY, 0.2]);
+
+  // ----- Wires (they follow the parts only when the speaker is closed). -----
+  const wires = new THREE.Group();
+  const tube = (pts, mat) => wires.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(...p))), 40, 0.006, 6), mat));
+  tube([[0.3, -0.5, -0.36], [0.42, -0.3, -0.4], [0.42, 0.2, -0.4], [0.2, 0.39, -0.28]], MAT.wireR);
+  tube([[0.31, -0.5, -0.35], [0.41, -0.3, -0.41], [0.41, 0.2, -0.41], [0.19, 0.39, -0.29]], MAT.wireK);
+  tube([[-0.3, -0.5, -0.3], [-0.2, -0.45, -0.1], [-0.05, -0.41, 0.05]], MAT.wireB);
+  tube([[-0.33, -0.5, -0.33], [-0.42, -0.2, -0.42], [-0.3, 0.06, -0.41]], MAT.wireB);
+  part("wires", wires, body, 0, 0, [0.42, 0.0, -0.4]);
+
+  // Each part has its own copies of its materials (so one can light up alone); keep the copies that change every frame.
+  const casingShell = ["topsec", "sleeve", "botsec"].map(id => P[id].grp.children[0].material);
+  const casingFab = ["topsec", "sleeve", "botsec"].map(id => P[id].grp.children[1].material);
+  const netM = net.children[0].material;
+
+  // ---------- Selecting and highlighting ----------
+  const ACCENT = new THREE.Color(0xf3cf86), BLACK = new THREE.Color(0);
+  function setHighlight() {
+    const hl = new Set(state.step >= 0 && !state.sel ? STEPS[state.step].parts : []); if (state.sel) hl.add(state.sel);
+    scene.traverse(o => {
+      if (!o.isMesh || !o.userData.part) return;
+      (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
+        if (!m.emissive) return; const on = hl.has(o.userData.part); m.emissive.copy(on ? ACCENT : BLACK); m.emissiveIntensity = on ? 0.45 : 1;
+      });
+    });
+  }
+  function select(id) {
+    state.sel = id; setHighlight(); showInfo(); syncRows();
+    const p = byId[id]; if (p && !state.show[p.g]) { state.show[p.g] = true; syncGroups(); }
+  }
+  function showInfo() {
+    const el = $("info"), p = byId[state.sel];
+    const pics = ids => `<div class="thumbs">${ids.map(id => byId[id].img ? `<img src="${byId[id].img}" alt="${byId[id].name}" title="${byId[id].name}">` : "").join("")}</div>`;
+    if (!p && state.step >= 0) {
+      const s = STEPS[state.step];
+      el.innerHTML = `<div class="who"><span class="num" style="background:var(--accent)">${state.step + 1}</span><h3>${s.t}</h3></div>${pics(s.parts)}
+        <ol>${s.do.map(d => `<li>${d}</li>`).join("")}</ol>
+        <dl class="kv"><dt>Fixings</dt><dd>${s.screws}</dd><dt>Tools</dt><dd>${s.tools}</dd><dt>Check</dt><dd>${s.check}</dd></dl>`;
+      return;
+    }
+    if (!p) {
+      el.innerHTML = `<div class="who"><h3>Click any part</h3></div><p>Click a part in the model, a number, or a row in the parts list to see what it does, the suggested part and its size. Or press Start above to build it step by step.</p>`;
+      return;
+    }
+    const pw = p.pw ? `${p.pw[0]} W / ${p.pw[1]} W` : "";
+    el.innerHTML = `<div class="who"><span class="num" style="background:${gcol(p.g)}">${p.no}</span><h3>${p.name}${p.n > 1 ? ` × ${p.n}` : ""}</h3></div>
+      ${p.img ? `<img class="pic" src="${p.img}" alt="${p.name}">` : ""}
+      <p>${p.what}</p>
+      <dl class="kv"><dt>Suggested</dt><dd>${p.sug}</dd>${p.size ? `<dt>Size (mm)</dt><dd>${p.size}</dd>` : ""}${pw ? `<dt>Power</dt><dd>${pw}</dd>` : ""}
+      <dt>Group</dt><dd>${GROUPS.find(g => g[0] === p.g)[1]}</dd></dl>`;
+  }
+
+  // ---------- Controls ----------
+  const VIEWS = [["whole", "Closed", 0, 1], ["xray", "See-through", 0, 0.12], ["apart", "Pulled apart", 1, 0.12]];
+  VIEWS.forEach(([id, name, e, c]) => {
+    const b = document.createElement("button"); b.textContent = name; b.id = "view-" + id;
+    b.addEventListener("click", () => { state.view = id; state.eT = e; state.casingT = c; $("explode").value = e * 100; syncViews(); });
+    $("views").appendChild(b);
+  });
+  const syncViews = () => VIEWS.forEach(([id]) => $("view-" + id).setAttribute("aria-pressed", String(state.view === id)));
+  $("explode").addEventListener("input", ev => {
+    state.eT = ev.target.value / 100; state.e = state.eT;
+    if (state.eT > 0.02 && state.casingT > 0.5) state.casingT = 0.12;
+    state.view = state.eT > 0.98 ? "apart" : state.eT < 0.02 ? (state.casingT > 0.5 ? "whole" : "xray") : "custom"; syncViews();
+  });
+  GROUPS.forEach(([id, name]) => {
+    const b = document.createElement("button"); b.className = "chipbtn"; b.id = "grp-" + id;
+    b.innerHTML = `<i style="background:${gcol(id)}"></i>${name}`;
+    b.addEventListener("click", () => { state.show[id] = !state.show[id]; syncGroups(); });
+    $("groups").appendChild(b);
+  });
+  function syncGroups() {
+    GROUPS.forEach(([id]) => $("grp-" + id).setAttribute("aria-pressed", String(state.show[id])));
+    PARTS.forEach(p => { P[p.id].grp.visible = state.show[p.g]; });
+  }
+  // Building step by step: each step shows its parts arriving on what is already built.
+  const stepOf = {}; STEPS.forEach((s, i) => s.parts.forEach(id => { stepOf[id] = i; }));
+  function setStep(i) {
+    state.step = Math.max(-1, Math.min(STEPS.length - 1, i)); state.stepT = 0; state.sel = null;
+    if (state.step >= 0) {
+      const last = state.step === STEPS.length - 1;
+      state.eT = 0; $("explode").value = 0; state.casingT = last ? 1 : 0.12; state.view = last ? "whole" : "xray"; syncViews();
+      if (last && !state.fabric) $("fabric").click();
+    }
+    setHighlight(); showInfo(); syncRows(); syncStepbar();
+  }
+  function syncStepbar() {
+    const s = state.step;
+    $("stLabel").textContent = s < 0 ? "Not started" : `Step ${s + 1} of ${STEPS.length}: ${STEPS[s].t}`;
+    $("stPrev").disabled = s < 0; $("stNext").textContent = s < 0 ? "Start" : "Next"; $("stNext").disabled = s >= STEPS.length - 1; $("stStop").hidden = s < 0;
+  }
+  $("stPrev").addEventListener("click", () => setStep(state.step - 1));
+  $("stNext").addEventListener("click", () => setStep(state.step + 1));
+  $("stStop").addEventListener("click", () => setStep(-1));
+  [["turnBody"], ["turnSeat"], ["dome"], ["lights"], ["fabric"], ["nums"]].forEach(([k]) => {
+    $(k).addEventListener("click", () => {
+      state[k] = !state[k]; $(k).setAttribute("aria-pressed", String(state[k]));
+      if (k === "dome") domeG.visible = state.dome;
+      if (k === "turnSeat" && state.turnSeat && !state.dome) { state.dome = true; domeG.visible = true; $("dome").setAttribute("aria-pressed", "true"); }
+    });
+  });
+
+  // ---------- Parts list and power table ----------
+  const tb = document.querySelector("#bom tbody");
+  GROUPS.forEach(([g, gname]) => {
+    const list = PARTS.filter(p => p.g === g); if (!list.length) return;
+    const gr = document.createElement("tr"); gr.className = "grouprow"; gr.innerHTML = `<td colspan="7">${gname}</td>`; tb.appendChild(gr);
+    list.forEach(p => {
+      const tr = document.createElement("tr"); tr.dataset.id = p.id; tr.tabIndex = 0;
+      tr.innerHTML = `<td class="n"><i style="background:${gcol(p.g)}"></i>${p.no}</td><td class="shape"><img alt="" data-img="${p.id}"></td><td><b>${p.name}</b></td><td>${p.what}</td><td class="mono">${p.sug}</td><td class="mono">${p.size}</td><td class="num-r">${p.n}</td>`;
+      const go = () => { select(p.id); if (state.view === "whole") $("view-xray").click(); $("stage").scrollIntoView({ behavior: "smooth", block: "nearest" }); };
+      tr.addEventListener("click", go); tr.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+      tb.appendChild(tr);
+    });
+  });
+  const syncRows = () => tb.querySelectorAll("tr[data-id]").forEach(tr => tr.classList.toggle("on", tr.dataset.id === state.sel));
+  let typ = 0, max = 0;
+  POWER.forEach(([n, a, b, note]) => { typ += a; max += b; $("power").insertAdjacentHTML("beforeend", `<tr><td>${n}</td><td class="num-r">${a}</td><td class="num-r">${b}</td><td>${note}</td></tr>`); });
+  $("pTyp").textContent = typ.toFixed(1); $("pMax").textContent = max.toFixed(1);
+  FIX.forEach(([n, c, w]) => $("fix").insertAdjacentHTML("beforeend", `<tr><td>${n}</td><td class="num-r">${c}</td><td>${w}</td></tr>`));
+  STEPS.forEach((s, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<div><div class="stepno">STEP ${i + 1}</div><h3>${s.t}</h3><div class="thumbs" data-step="${i}"></div>
+      <ol>${s.do.map(d => `<li>${d}</li>`).join("")}</ol>
+      <p class="meta"><b>Fixings:</b> ${s.screws} · <b>Tools:</b> ${s.tools}</p><p class="meta"><b>Check:</b> ${s.check}</p></div>
+      <button class="chipbtn" type="button">Show in 3D</button>`;
+    li.querySelector("button").addEventListener("click", () => { setStep(i); $("stage").scrollIntoView({ behavior: "smooth", block: "start" }); });
+    $("guide").appendChild(li);
+  });
+
+  // ---------- Number markers over the model ----------
+  const calloutEls = {};
+  PARTS.forEach(p => {
+    const b = document.createElement("button"); b.textContent = p.no; b.style.background = gcol(p.g);
+    b.setAttribute("aria-label", `${p.no}: ${p.name}`); b.addEventListener("click", () => select(p.id));
+    $("callouts").appendChild(b); calloutEls[p.id] = b;
+  });
+  const v3 = new THREE.Vector3();
+  function placeCallouts(w, h) {
+    PARTS.forEach(p => {
+      const el = calloutEls[p.id], pp = P[p.id];
+      const casingPart = ["topsec", "sleeve", "botsec"].includes(p.id);
+      const show = state.nums && pp.grp.visible && !(p.id === "wires" && state.e > 0.05) && (casingPart ? state.casing > 0.5 || state.e > 0.3 : state.casing < 0.5 || ["plate", "seat", "base"].includes(p.id));
+      el.hidden = !show; if (!show) return;
+      v3.copy(pp.anchor); pp.grp.localToWorld(v3); v3.project(camera);
+      el.style.left = ((v3.x + 1) / 2 * w) + "px"; el.style.top = ((1 - v3.y) / 2 * h) + "px";
+      el.classList.toggle("on", state.sel === p.id);
+    });
+  }
+
+  // ---------- Turning the view by hand ----------
+  let yaw = -0.6, pitch = 0.32, dist = 5.0, dragging = false, moved = 0, lx = 0, ly = 0;
+  canvas.addEventListener("pointerdown", e => { dragging = true; moved = 0; lx = e.clientX; ly = e.clientY; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener("pointermove", e => {
+    if (!dragging) return; const dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY; moved += Math.abs(dx) + Math.abs(dy);
+    yaw -= dx * 0.008; pitch = Math.max(-1.2, Math.min(1.35, pitch + dy * 0.006));
+  });
+  canvas.addEventListener("pointerup", e => { dragging = false; if (moved < 5) pick(e); });
+  canvas.addEventListener("pointercancel", () => { dragging = false; });
+  canvas.addEventListener("wheel", e => { e.preventDefault(); dist = Math.max(2.4, Math.min(9, dist * (e.deltaY > 0 ? 1.08 : 0.93))); }, { passive: false });
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  function pick(e) {
+    const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const targets = []; Object.entries(P).forEach(([id, p]) => {
+      if (!p.grp.visible) return;
+      if (["topsec", "sleeve", "botsec"].includes(id) && state.casing < 0.5) return;
+      if (id === "net" && state.casing > 0.5) return;
+      p.grp.traverse(o => { if (o.isMesh && o.visible) targets.push(o); });
+    });
+    const hits = ray.intersectObjects(targets, false).filter(h => {
+      // Skip the parts of the casing that its cutting planes hide, and fabric that is switched off.
+      const mats = Array.isArray(h.object.material) ? h.object.material : [h.object.material];
+      if (mats.some(m => m.visible === false)) return false;
+      return !mats.some(m => m.clippingPlanes && m.clippingPlanes.some(pl => pl.distanceToPoint(h.point) < 0));
+    });
+    select(hits.length ? hits[0].object.userData.part : null);
+  }
+
+  // ---------- Every frame ----------
+  function resize() {
+    const r = canvas.getBoundingClientRect(), w = Math.max(1, r.width), h = Math.max(1, r.height);
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); return [w, h];
+  }
+  let size = resize(); window.addEventListener("resize", () => { size = resize(); });
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let last = performance.now(), bodyA = 0, seatA = 0, netShift = 0, t = 0;
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+    const k = reduce ? 1 : 1 - Math.pow(0.002, dt);
+    state.e += (state.eT - state.e) * k; state.casing += (state.casingT - state.casing) * k;
+    const e = state.e;
+
+    // Pull the parts apart: up or down, and the side speakers outwards.
+    Object.values(P).forEach(p => {
+      p.grp.position.copy(p.home); p.grp.position.y += p.dy * e;
+      if (p.out) { const d = Math.hypot(p.home.x, p.home.z); if (d > 0.01) { p.grp.position.x += p.home.x / d * p.out * e; p.grp.position.z += p.home.z / d * p.out * e; } }
+    });
+    mids.children.forEach(hd => { hd.children[0].position.z = 0.408 + P.mids.out * e; });
+    P.mids.grp.position.set(0, 0, 0);
+    P.net.grp.scale.set(1 + 0.42 * e, 1, 1 + 0.42 * e);
+    // Which parts show: the groups switched on, only the steps built so far, and the wires only when closed.
+    PARTS.forEach(p => { P[p.id].grp.visible = state.show[p.g] && (state.step < 0 || stepOf[p.id] <= state.step) && (p.id !== "wires" || e < 0.05); });
+    // The newest step's parts drop gently into place.
+    state.stepT = Math.min(1, state.stepT + dt * 1.6);
+    if (state.step >= 0 && !reduce) { const d = Math.pow(1 - state.stepT, 2) * 0.35; STEPS[state.step].parts.forEach(id => { P[id].grp.position.y += d; }); }
+    // The casing's cutting planes follow its sections.
+    const dTop = P.topsec.dy * e, dBot = P.botsec.dy * e;
+    clip.top.constant = -(cutHi + dTop); clip.sHi.constant = cutHi; clip.sLo.constant = -cutLo; clip.bot.constant = cutLo + dBot;
+    state.fab += ((state.fabric ? 1 : 0) - state.fab) * k;
+    casingFab.forEach(m => { m.opacity = state.casing * state.fab; m.depthWrite = m.opacity > 0.9; m.visible = m.opacity > 0.01; });
+    casingShell.forEach(m => { m.opacity = 0.12 + 0.55 * state.casing; });
+    P.box.grp.children[0].material.opacity = 0.35 + 0.55 * (1 - Math.min(1, e * 2)) * (state.casing < 0.5 ? 0.6 : 1);
+
+    // Motors.
+    if (state.turnBody && !reduce) bodyA += dt * (Math.PI * 2 / 60) * 6;   // shown six times faster than the real one turn a minute
+    body.rotation.y = bodyA;
+    pinion.rotation.y = -bodyA * (0.43 / 0.03);
+    if (state.turnSeat && !reduce) seatA += dt * 0.9;
+    P.seat.grp.rotation.y = seatA;
+    // Lights: the ring breathes and the net's colours drift.
+    const lit = state.lights;
+    const br = lit ? 0.75 + 0.25 * Math.sin(t * 2) : 0.08;
+    ring.material.color.setHSL(0.43, 0.6, 0.35 + 0.3 * br); ringLeds.forEach(l => l.material.color.copy(ring.material.color));
+    netShift += dt * 0.03; netM.map.offset.x = netShift; netM.opacity = lit ? (state.casing > 0.5 ? 0 : 0.95 - 0.5 * e) : 0.25;
+    netM.color.setScalar(lit ? 1 : 0.35);
+
+    // Camera: back away a little when the parts are apart.
+    const dd = dist * (1 + 0.45 * e), cy = -0.06 + 0.05 * e;
+    camera.position.set(Math.sin(yaw) * Math.cos(pitch) * dd, cy + Math.sin(pitch) * dd, Math.cos(yaw) * Math.cos(pitch) * dd);
+    camera.lookAt(0, cy, 0);
+    grid.position.y = baseY - 0.047 - 0.62 * e - 0.002;
+    renderer.render(scene, camera);
+    placeCallouts(size[0], size[1]);
+    if (++frames === 3) makeThumbs();
+    requestAnimationFrame(frame);
+  }
+  let frames = 0;
+
+  // ---------- A small picture of every part, drawn from the same 3D model ----------
+  const SECT_Y = { topsec: [cutHi, H / 2 + 0.01], sleeve: [cutLo, cutHi], botsec: [-H / 2, cutLo] };
+  function makeThumbs() {
+    let tr;
+    try { tr = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); } catch (err) { return; }
+    tr.setPixelRatio(1); tr.setSize(240, 180, false); tr.outputEncoding = THREE.sRGBEncoding; tr.toneMapping = THREE.ACESFilmicToneMapping; tr.localClippingEnabled = true;
+    const cam = new THREE.PerspectiveCamera(26, 4 / 3, 0.01, 50), dir = new THREE.Vector3(0.8, 0.6, 1).normalize();
+    const keep = Object.fromEntries(Object.entries(P).map(([id, p]) => [id, p.grp.visible]));
+    const hadDome = domeG.visible; domeG.visible = false;
+    grid.visible = false; const netOp = netM.opacity; netM.opacity = 0.95;
+    PARTS.forEach(p => {
+      Object.values(P).forEach(q => { q.grp.visible = false; });
+      const g = P[p.id].grp; g.visible = true;
+      if (p.id === "locks") { P.sleeve.grp.visible = true; P.sleeve.grp.children.forEach((c, i) => { c.visible = i >= 2; }); }
+      const b = new THREE.Box3().setFromObject(g);
+      if (p.id === "seat") b.setFromCenterAndSize(new THREE.Vector3(0, H / 2 - 0.04, 0), new THREE.Vector3(0.16, 0.14, 0.16));
+      if (SECT_Y[p.id]) { b.min.y = SECT_Y[p.id][0]; b.max.y = SECT_Y[p.id][1]; }
+      const c = b.getCenter(new THREE.Vector3()), s = Math.max(0.05, b.getSize(new THREE.Vector3()).length());
+      cam.position.copy(c).addScaledVector(dir, s * 1.75); cam.lookAt(c);
+      tr.render(scene, cam); p.img = tr.domElement.toDataURL("image/png");
+      if (p.id === "locks") P.sleeve.grp.children.forEach(ch => { ch.visible = true; });
+    });
+    Object.entries(keep).forEach(([id, v]) => { P[id].grp.visible = v; });
+    domeG.visible = hadDome; grid.visible = true; netM.opacity = netOp; tr.dispose();
+    document.querySelectorAll("img[data-img]").forEach(i => { const p = byId[i.dataset.img]; i.src = p.img; i.alt = p.name; });
+    document.querySelectorAll(".thumbs[data-step]").forEach(d => {
+      d.innerHTML = STEPS[d.dataset.step].parts.map(id => `<img src="${byId[id].img}" alt="${byId[id].name}" title="${byId[id].name}">`).join("");
+    });
+    showInfo();
+  }
+  syncViews(); syncGroups(); showInfo(); syncStepbar();
+  requestAnimationFrame(frame);
+})();
+</script>
