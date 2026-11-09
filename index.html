@@ -338,7 +338,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     <section>
       <h3>First model: the hardware</h3>
       <ul>
-        <li><b>Hidden flexible LED screen</b> behind the casing on all four sides. When it is off, the speaker is one clean object; when it is on, the words glow through.</li>
+        <li><b>Hidden flexible AMOLED screen</b> behind the casing on all four sides. AMOLED pixels light themselves, so no backlight is needed. When it is off, the speaker is one clean object; when it is on, the words glow through.</li>
         <li><b>Turning base</b> with a quiet motor that slowly turns the speaker, so everyone in the room can read it. The base stays still.</li>
         <li><b>A grid of small colour LEDs</b> behind the casing, each one its own colour: it colours the casing and draws soft, slowly moving patterns of light (flowers, mandala, ribbons, stars, girih, arabesque) in one colour or many, chosen in the app. Nothing is printed.</li>
         <li><b>Microphones on top</b>, so you can say "Assalamu alaikum, Ustadh, play Surah Yasin".</li>
@@ -360,6 +360,17 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
         <li><b>Hifz mode</b>, <b>night mode</b> with Surah Al-Mulk, <b>respectful mode</b>, and a <b>kids mode</b> with the Kiitab students.</li>
         <li><b>Phone app</b> to set up the speaker, choose its voice and personality, and pick what each side shows.</li>
       </ul>
+    </section>
+    <section>
+      <h3>From the simplest to the most advanced</h3>
+      <p>Every model shares the same bottom half. Only the top and the screen change, so each step up is a new top, not a new speaker.</p>
+      <ul>
+        <li><b>Step 1, Plain:</b> no screen. It speaks, and its light shows what it is doing.</li>
+        <li><b>Step 2, Face:</b> one flexible AMOLED screen on the front, which shows the face and turns with the body.</li>
+        <li><b>Step 3, Wrap:</b> the flexible screen goes all the way round, so the words can be read from any side.</li>
+        <li><b>Step 4, Cube:</b> four screen panels, one per side. The most advanced, with the most power, heat and cost, so it comes last.</li>
+      </ul>
+      <p class="note">AMOLED burns in if one picture stays still for hours, so the face moves and dims over time.</p>
     </section>
     <section>
       <h3>Later models</h3>
@@ -402,11 +413,12 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
   const WORDS = [];
   AYAHS.forEach((a, ai) => a.ar.split(" ").forEach((w, i, all) => WORDS.push({ ai, i, last: i === all.length - 1 })));
   const LOOKS = [
-    { id: "classic", name: "Classic", line: "Rounded square, wood and brass", taper: 0, bandH: 0.5, bandY: 0.02, screen: "wrap" },
-    { id: "mihrab", name: "Mihrab", line: "Narrows like a lantern, arches on the screen", taper: 0.14, bandH: 0.6, bandY: 0.0, arches: true, screen: "wrap" },
-    { id: "front", name: "Front screen", line: "One screen on the front only, the other sides plain fabric", taper: 0, bandH: 0.5, bandY: 0.02, screen: "front" },
-    { id: "lcd", name: "Small display", line: "A little LCD on the front: surah, ayah, time, count", taper: 0, bandH: 0.13, bandY: 0.14, screen: "lcd" },
+    // Simplest first, then more advanced: Plain, Face, Wrap (Classic, Mihrab), then the small display.
     { id: "plain", name: "Plain", line: "No screen at all: it speaks, and its light shows what it is doing", taper: 0, bandH: 0.5, bandY: 0.02, screen: "none" },
+    { id: "front", name: "Face", line: "One flexible AMOLED screen on the front, the other sides plain fabric", taper: 0, bandH: 0.5, bandY: 0.02, screen: "front" },
+    { id: "classic", name: "Classic", line: "Rounded square, wood and brass, screen all round", taper: 0, bandH: 0.5, bandY: 0.02, screen: "wrap" },
+    { id: "mihrab", name: "Mihrab", line: "Narrows like a lantern, arches on the screen", taper: 0.14, bandH: 0.6, bandY: 0.0, arches: true, screen: "wrap" },
+    { id: "lcd", name: "Small display", line: "A little LCD on the front: surah, ayah, time, count", taper: 0, bandH: 0.13, bandY: 0.14, screen: "lcd" },
   ];
   // What each kind of screen can show, said in the app under the shape.
   const SCREEN_NOTES = {
@@ -471,7 +483,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
   const WOODS = [["Walnut", "#6b4a2f", "#4a311d"], ["Oak", "#b8905f", "#8a6a42"], ["Ebony", "#2e2724", "#1b1715"]];
 
   const state = {
-    look: LOOKS[0], mode: "recite", layout: "run", screen: "hidden",
+    look: LOOKS.find(l => l.id === "classic"), mode: "recite", layout: "run", screen: "hidden",
     sides: { front: "arabic", right: "english", back: "info", left: "clock" },
     led: LEDS[0][1], cycle: false, level: 1, pattern: "none", palette: "mono", move: false, frames: false, addon: "none", kaabaSpin: false, tour: false,
     casing: CASINGS[0][1], casingGlow: 1, finish: "linen", open: false, wood: WOODS[0], spin: false, view: "front",
