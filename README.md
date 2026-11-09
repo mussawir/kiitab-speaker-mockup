@@ -28,7 +28,7 @@ These are design mockups, not finished products. Layouts, colours, wording and p
 
 ## Feedback
 
-Please send comments to **[your name and email here]**, or open an issue in this repository. Include the page name and, where possible, a screenshot or a short description of what you would change.
+Please send comments to **Musavir Iftikhar musa@appcraftr.com**, or open an issue in this repository. Include the page name and, where possible, a screenshot or a short description of what you would change.
 
 ## About this repository
 
@@ -36,4 +36,4 @@ This repository holds only the two static web pages above. It contains no person
 
 ## Copyright
 
-© [Year] [Your company name]. All rights reserved. These mockups are shared for review only and may not be copied or reused without permission.
+© 2026 Inkabots Pvt Ltd. All rights reserved. These mockups are shared for review only and may not be copied or reused without permission.
