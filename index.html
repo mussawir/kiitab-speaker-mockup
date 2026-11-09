@@ -487,7 +487,8 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
   const WOODS = [["Walnut", "#6b4a2f", "#4a311d"], ["Oak", "#b8905f", "#8a6a42"], ["Ebony", "#2e2724", "#1b1715"]];
 
   const state = {
-    look: LOOKS.find(l => l.id === "speaker"), mode: "recite", layout: "run", screen: "hidden",
+    // ?shape=power (or any shape id) in the address opens that shape; otherwise the Speaker.
+    look: LOOKS.find(l => l.id === new URLSearchParams(location.search).get("shape")) || LOOKS.find(l => l.id === "speaker"), mode: "recite", layout: "run", screen: "hidden",
     sides: { front: "arabic", right: "english", back: "info", left: "clock" },
     led: LEDS[0][1], cycle: false, level: 1, pattern: "none", palette: "mono", move: false, frames: false, addon: "none", kaabaSpin: false, tour: false,
     casing: CASINGS[0][1], casingGlow: 1, finish: "linen", open: false, wood: WOODS[0], spin: false, view: "front",
@@ -1281,6 +1282,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
   const flat = (w, h, mat, x, y, z, parent) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); m.position.set(x, y, z); parent.add(m); return m; };
   // One screen on the front only: a raised fabric panel with a brass frame all round.
   function buildFront(L) {
+    if (L.black) return buildGlassFront(L);
     const pw = per.side - 0.02, ph = L.bandH, zf = D / 2 + 0.02, y = L.bandY;
     // The screen is drawn at the width it really has on the narrowed casing, so the words are not squeezed.
     makeBand(1536, Math.round(1536 * ph / (pw * (L.width || 1))));
@@ -1298,6 +1300,18 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     coreShade = flat(pw, ph, coreMat, 0, y, zc, bottomSec);
     coreText = flat(pw, ph, coreTextMat, 0, y, zc + 0.003, bottomSec);
     makeShade();
+  }
+  // The Power Speaker's screen: one sheet of dark glass over the whole front, edge to edge and top to bottom,
+  // with no fabric panel and no frame. The words glow on the glass itself.
+  const glassMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x060708).convertSRGBToLinear(), roughness: 0.1, metalness: 0.5 });
+  const DARK_GREY = new THREE.Color(0x2a2d30).convertSRGBToLinear();
+  function buildGlassFront(L) {
+    const r = L.radius || R, pw = W - 2 * r + 0.07, ph = H - 2 * r + 0.07, zf = D / 2 + 0.004;
+    makeBand(1536, Math.round(1536 * ph / (pw * (L.width || 1))));
+    FACES = { front: BAND_W / 2 }; FACE_W = BAND_W;
+    raised = new THREE.Mesh(new THREE.BoxGeometry(pw, ph, 0.01), glassMat);
+    raised.position.set(0, 0, zf); sleeve.add(raised);
+    textMesh = flat(pw - 0.04, ph - 0.04, textMat, 0, 0, zf + 0.0056, sleeve);
   }
   // A small LCD on the front: a dark bezel and a dot-matrix window, 128 by 40 dots.
   function buildLcd(L) {
@@ -1349,7 +1363,10 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     // The top plate, ring and microphones sit on the narrower top of the lantern.
     const t = taper(H / 2);
     plate.scale.set(t, 1, t); ring.scale.set(t, t, t);
-    mics.forEach(m => m.position.set(m.userData.xz[0] * t, H / 2 + 0.0145, m.userData.xz[1] * t));
+    // With no wooden plate (flat shapes) the ring, its dot and the microphones sit right on the casing.
+    const lift = L.flat ? 0.0125 : 0;
+    mics.forEach(m => m.position.set(m.userData.xz[0] * t, H / 2 + 0.0145 - lift, m.userData.xz[1] * t));
+    ring.position.y = H / 2 + 0.022 - lift - (L.flat ? 0.008 : 0); dot.position.y = H / 2 + 0.024 - lift - (L.flat ? 0.008 : 0);
     paintCasing();
     offset = 0; layoutCache = null;
     redrawBand();
@@ -1359,6 +1376,8 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     [topSec, bottomSec].forEach(g => { g.scale.x = bodyWidth; g.scale.z = bodyDepth; });
     // The flat black shapes have no wooden top, add-on or base: the box stands on its own bottom.
     plate.visible = addon.visible = baseGroup.visible = !L.flat;
+    // The light ring lies flat on the top; stretch it back so the squashed casing does not make it an oval.
+    ring.scale.set(t / bodyWidth, t / bodyDepth, t);
     buildSpeakerParts(L);
   }
   // The speaker model's own parts: a round speaker grille on each side that is not the screen, and four
@@ -1371,6 +1390,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     const ex = speaker.userData.extras;
     ex.side.clear(); ex.top.clear();
     if (L.id !== "speaker" && L.id !== "power") return;
+    if (L.id === "power") return buildPowerParts(ex);
     if (!ex.grille) {
       // Dots on a dark disc, like the holes of a real speaker grille.
       ex.grille = new THREE.MeshStandardMaterial({ roughness: 0.6, metalness: 0.3, color: 0xffffff, map: canvasTex(256, 256, (g, w, h) => {
@@ -1384,12 +1404,42 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     // Left, right and back: a flat disc set just proud of the casing, facing outwards.
     [[-W / 2 - 0.003, 0, 0, -Math.PI / 2], [W / 2 + 0.003, 0, 0, Math.PI / 2], [0, 0, -D / 2 - 0.003, Math.PI]].forEach(([x, y, z, ry]) => {
       const m = new THREE.Mesh(new THREE.CircleGeometry(0.2, 48), ex.grille); m.position.set(x, y, z); m.rotation.y = ry;
-      if (L.black) m.scale.x = 0.55;   // the Power Speaker's grilles are ovals, long up and down
       ex.side.add(m);
     });
     // Four buttons along the front edge of the top, clear of the microphones.
     [-0.3, -0.1, 0.1, 0.3].forEach(x => {
       const b = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.012, 28), ex.button); b.position.set(x, H / 2 + 0.006, 0.4); ex.top.add(b);
+    });
+  }
+  // The Power Speaker, after a studio subwoofer: one big woofer on each side under dark acoustic cloth, set back
+  // from the front so a clean band of casing runs before it, and four slim metal keys on the top.
+  // The casing is squashed to make the box narrow and shallow, so each round part is stretched back to stay round.
+  function buildPowerParts(ex) {
+    if (!ex.cloth) {
+      ex.cloth = new THREE.MeshStandardMaterial({ roughness: 0.95, metalness: 0, map: canvasTex(512, 512, (g, w, h) => {
+        g.fillStyle = "#0f1011"; g.fillRect(0, 0, w, h);
+        // A fine woven cloth: faint threads both ways.
+        g.globalAlpha = 0.28; g.strokeStyle = "#34373a"; g.lineWidth = 1;
+        for (let i = 0.5; i < w; i += 3) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, h); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(w, i); g.stroke(); }
+        g.globalAlpha = 1;
+        // The cone behind the cloth: a soft lighter middle and a darker edge.
+        const gr = g.createRadialGradient(w / 2, h / 2, w * 0.05, w / 2, h / 2, w / 2);
+        gr.addColorStop(0, "rgba(255,255,255,0.06)"); gr.addColorStop(0.8, "rgba(0,0,0,0)"); gr.addColorStop(1, "rgba(0,0,0,0.55)");
+        g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      }) });
+      ex.rim = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x0a0b0c).convertSRGBToLinear(), roughness: 0.35, metalness: 0.6, side: THREE.DoubleSide });
+      ex.key = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x3a3d40).convertSRGBToLinear(), roughness: 0.28, metalness: 0.75 });
+    }
+    const sx = 1 / bodyWidth, sz = 1 / bodyDepth;
+    const rad = 0.215, zc = -0.045 * sz, yc = -0.02;   // big, a little behind the middle of the side
+    [[-1, -Math.PI / 2], [1, Math.PI / 2]].forEach(([s, ry]) => {
+      const disc = new THREE.Mesh(new THREE.CircleGeometry(rad, 96), ex.cloth);
+      const rim = new THREE.Mesh(new THREE.RingGeometry(rad, rad + 0.007, 96), ex.rim);
+      [disc, rim].forEach((m, k) => { m.position.set(s * (W / 2 + 0.002 + k * 0.0006), yc, zc); m.rotation.y = ry; m.scale.x = sz; ex.side.add(m); });
+    });
+    [-0.165, -0.055, 0.055, 0.165].forEach(x => {
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.006, 40), ex.key);
+      b.position.set(x * sx, H / 2 + 0.003, 0.2 * sz); b.scale.set(sx, 1, sz); ex.top.add(b);
     });
   }
   // A mihrab arch: straight sides, then two curves meeting in a point.
@@ -1743,8 +1793,7 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
 
   // ---------- Camera: drag to turn and tilt, or pick a view ----------
   let yaw = -0.35, elev = 0.16, goal = null, dragging = false, lastX = 0, lastY = 0, lastTouch = -10;
-  function goView(v) { state.view = v.id; goal = { elev: v.elev, yaw: v.id === "top" || v.id === "bottom" ? null : v.yaw }; lastTouch = clock; }
-  canvas.addEventListener("pointerdown", e => { dragging = true; goal = null; lastX = e.clientX; lastY = e.clientY; canvas.setPointerCapture(e.pointerId); });
+  function goView(v) { state.view = v.id; goal = { elev: v.elev, yaw: v.id === "top" || v.id === "bottom" ? null : v.yaw }; lastTouch = clock; }  canvas.addEventListener("pointerdown", e => { dragging = true; goal = null; lastX = e.clientX; lastY = e.clientY; canvas.setPointerCapture(e.pointerId); });
   canvas.addEventListener("pointermove", e => {
     if (!dragging) return;
     yaw += (e.clientX - lastX) * 0.01; elev = Math.max(-1.45, Math.min(1.45, elev + (e.clientY - lastY) * 0.008));
@@ -1827,6 +1876,11 @@ h2 { font: 600 22px/1.2 var(--display); margin: 0 0 4px; }
     ringMat.color.copy(led).multiplyScalar(sb ? 0.03 : state.mode === "night" ? 0.35 : 0.7 + voice * 0.6);
     seamMat.color.copy(led).multiplyScalar(0.08 + lightOn * (0.5 + lvl));
     glowMat.color.copy(led); glowMat.opacity = lightOn * (0.25 + lvl * 0.6);
+    // The Power Speaker is dark grey metal: the light inside never colours it, and it has no glowing base.
+    if (state.look.black) {
+      casingMats.forEach(m => { m.color.copy(DARK_GREY); m.emissiveIntensity = 0; m.roughness = 0.42; m.metalness = 0.35; });
+      glowMat.opacity = 0;
+    } else casingMats.forEach(m => { m.metalness = 0; });
     // The screen: barely visible behind the casing when hidden, a dark panel when glass.
     shadeMat.opacity = (state.screen === "glass" ? 0.96 : 0.3) * (1 - e2);
     textMat.opacity = (state.screen === "glass" || state.look.screen !== "wrap" ? 1 : 0.92) * (1 - e2) * (sb ? 0 : 1);
