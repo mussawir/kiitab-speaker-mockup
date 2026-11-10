@@ -148,7 +148,7 @@ h3.sub3 { margin: 6px 0 0; font: 600 17px var(--body); }
     <p class="sub">What goes inside the simplest Kiitab: no screen, the same fabric body, wooden top and turning base as Classic. Open it up to see the speakers, the boards, the two motors and how power reaches a speaker that turns. The parts named are suggestions for the hardware engineer to confirm.</p>
     <div class="specs">
       <span>Body 160 × 160 × 192 mm</span><span>Base 160 × 160 × 13 mm</span><span>About 1.6 kg</span>
-      <span>65 W USB-C power</span><span>Wi-Fi + Bluetooth</span><span>5 speakers · 2 motors · 4 boards</span><span>About 76 screws</span>
+      <span>65 W USB-C power</span><span>Wi-Fi + Bluetooth</span><span>5 speakers · 2 motors · 5 boards</span><span>About 76 screws</span>
     </div>
   </header>
 
@@ -409,7 +409,7 @@ flowchart LR
     { t: "Fit the ring bearing", parts: ["bearing"], screws: "6 × M3×8 into the brass inserts", tools: "2 mm hex key", do: ["Line up the bearing's outer race with the six inserts.", "Tighten gently in a star order."], check: "The inner race turns freely by hand, with no rough spots." },
     { t: "Turning plate, spring contacts and home sensor", parts: ["deck", "brushes", "hall"], screws: "6 × M3×6 countersunk (bearing); 4 × M2×5 (contacts and sensor)", tools: "2 mm hex key, PH0 screwdriver", do: ["Screw the two spring contacts and the home sensor board under the turning plate.", "Lower the plate onto the bearing so the springs land on the copper rings.", "Screw the plate to the bearing's inner race."], check: "Turn the plate by hand: the springs stay on their rings all the way round." },
     { t: "Bottom motor", parts: ["motor"], screws: "4 × M3×6 from underneath", tools: "2.5 mm hex key", do: ["Press the 12-tooth gear onto the motor shaft.", "Put the motor in its corner with the gear down through the plate.", "Slide it towards the gear ring until the teeth just mesh, then tighten."], check: "A hair of play between the teeth and no grinding when turned by hand." },
-    { t: "Amplifier and power boards", parts: ["amp", "pwr"], screws: "8 × M2.5 standoffs 8 mm; 8 × M2.5×5", tools: "5 mm spanner, PH0 screwdriver", do: ["Screw four standoffs into each back corner of the plate.", "Fit the amplifier board back-left and the power board back-right."], check: "No board touches the plate, the motor or a leg." },
+    { t: "Amplifier and power boards", parts: ["amp", "pwr", "esp"], screws: "8 × M2.5 standoffs 8 mm; 8 × M2.5×5", tools: "5 mm spanner, PH0 screwdriver", do: ["Screw four standoffs into each back corner of the plate.", "Fit the amplifier board back-left and the power board back-right."], check: "No board touches the plate, the motor or a leg." },
     { t: "Bass speaker and sound box", parts: ["woofer", "box"], screws: "4 × M3×10 (bass speaker); 4 × M3×12 from under the plate (legs)", tools: "2 mm hex key, soldering iron", do: ["Screw the bass speaker into the bottom of the sound box on its foam gasket, facing down.", "Solder its wires and pass them out through the sealed grommet.", "Stand the box on its four legs and screw it from under the plate."], check: "Press the cone gently: it moves evenly and springs back slowly (the box is airtight)." },
     { t: "Side speakers", parts: ["mids"], screws: "16 × M3×8 self-tapping for plastic", tools: "PH1 screwdriver", do: ["Put a foam gasket on each side opening.", "Screw in the four side speakers, terminals at the bottom.", "Wire front and back as one pair, left and right as the other."], check: "Every speaker sits flat with no gap round its gasket." },
     { t: "Light net", parts: ["net"], screws: "None: the strips clip into slots", tools: "None", do: ["Clip the 16 strips into the frame slots round the sound box, lights facing out.", "Keep the gaps between strips in front of the speakers.", "Lead the one data cable up towards the main board."], check: "The light test lights every LED in turn." },
@@ -750,6 +750,13 @@ flowchart LR
     b.add(cyl(0.018, 0.045, MAT.cap, 0.05, 0.027, 0.05)); b.add(cyl(0.018, 0.045, MAT.cap, 0.06, 0.027, -0.03));
     b.add(box(0.03, 0.008, 0.03, MAT.chip, 0.0, 0.009, 0)); b.add(box(0.025, 0.008, 0.025, MAT.chip, 0.0, 0.009, -0.065));
     b.add(box(0.05, 0.018, 0.022, MAT.white, -0.07, 0.014, 0.085));
+  }, [0, 0.06, 0]);
+  // The ESP32-S3 board: lights, touch and both motors, so the main board is free for the brain.
+  cornerBoard("esp", 0.32, 0.32, 57, b => {
+    b.add(box(0.07, 0.012, 0.09, MAT.steel, 0, 0.011, -0.01));          // the module under its metal shield
+    b.add(box(0.07, 0.004, 0.03, MAT.pcb, 0, 0.007, 0.05));             // its printed antenna
+    b.add(box(0.06, 0.018, 0.022, MAT.white, -0.05, 0.014, -0.08));      // serial link to the main board
+    b.add(box(0.05, 0.018, 0.022, MAT.white, 0.06, 0.014, -0.08));       // the light net
   }, [0, 0.06, 0]);
   const hall = new THREE.Group(); hall.position.set(-0.36, deckY - 0.008, 0.36);
   hall.add(board(0.06, 0.05, 41)); hall.add(box(0.012, 0.008, 0.01, MAT.chip, 0, -0.008, 0));
